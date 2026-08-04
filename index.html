@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="description" content="Super Miau es una aventura web cinematica donde un gatito cruza dimensiones, rescata a su familia y vuelve a casa en un final epico.">
     <meta name="theme-color" content="#020617">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -23,6 +23,24 @@
         body {
             font-family: 'Fredoka', sans-serif;
             touch-action: manipulation;
+        }
+        body.game-active {
+            overflow: hidden;
+        }
+        body.game-active main {
+            padding-bottom: 9.75rem;
+        }
+        body.game-active #mobileControls {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding-bottom: calc(0.9rem + env(safe-area-inset-bottom));
+            background: linear-gradient(to top, rgba(2,6,23,0.96), rgba(2,6,23,0.25));
+            backdrop-filter: blur(10px);
+        }
+        body.game-active #pageFooter {
+            display: none !important;
         }
         #gameCanvas {
             image-rendering: pixelated;
@@ -1207,6 +1225,9 @@
             if (ui.pageFooter) {
                 ui.pageFooter.classList.toggle('hidden', blockingScreenVisible);
             }
+
+            const playingVisible = gameActive && !blockingScreenVisible;
+            document.body.classList.toggle('game-active', playingVisible);
         }
 
         function supportsFullscreen() {
