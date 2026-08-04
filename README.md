@@ -14,7 +14,9 @@
 - Maullido Estelar (cuando tengas ⭐): `F` o `Shift`
 - Nivel 5 (agua): bajar con Flecha ⬇️ o `S`
 - Pausa: `P` o `Escape`
-- Pantalla completa: boton `⛶` (arriba) o `⛶ Pantalla Completa` (en movil)
+- Pantalla completa:
+  - Android/PC: boton `⛶` (arriba) o `⛶ Pantalla Completa` (en movil). Recomendado jugar en horizontal.
+  - iOS (Safari): no existe pantalla completa real. Para “pantalla completa”, usa Compartir (⬆️) → **Agregar a pantalla de inicio** y abre el juego desde el icono.
 
 ## ¿Cómo funciona por dentro?
 - **La pantalla principal**:

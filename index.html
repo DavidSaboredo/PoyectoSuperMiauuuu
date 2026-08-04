@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="Super Miau es una aventura web cinematica donde un gatito cruza dimensiones, rescata a su familia y vuelve a casa en un final epico.">
     <meta name="theme-color" content="#020617">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Super Miau">
     <title>Super Miau | Aventura Web</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1207,42 +1210,117 @@
         }
 
         function supportsFullscreen() {
+            const docEl = document.documentElement;
+            const hasRequest = !!(
+                docEl &&
+                (typeof docEl.requestFullscreen === 'function' || typeof docEl.webkitRequestFullscreen === 'function')
+            );
+            const enabled = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+            return hasRequest && enabled;
+        }
+
+        function isIOSBrowser() {
+            const ua = navigator.userAgent || '';
+            const isAppleDevice = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            return isAppleDevice;
+        }
+
+        function isStandaloneDisplayMode() {
             return !!(
-                document.fullscreenEnabled &&
-                document.documentElement &&
-                typeof document.documentElement.requestFullscreen === 'function'
+                window.navigator.standalone ||
+                (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
             );
         }
 
         function isFullscreenActive() {
-            return !!document.fullscreenElement;
+            return !!(document.fullscreenElement || document.webkitFullscreenElement);
         }
 
         function updateFullscreenButtons() {
             const buttons = [ui.btnFullscreenHeader, ui.btnFullscreenMobile].filter(Boolean);
             const supported = supportsFullscreen();
+            const isIOS = isIOSBrowser();
             buttons.forEach(button => {
-                button.classList.toggle('hidden', !supported);
-                if (!supported) return;
+                button.classList.toggle('hidden', !supported && !isIOS);
+                if (!supported && !isIOS) return;
                 const wantsExit = isFullscreenActive();
+                if (!supported && isIOS) {
+                    if (button === ui.btnFullscreenHeader) {
+                        button.innerHTML = '📲 <span class="hidden sm:inline ml-1">Pantalla</span>';
+                    } else {
+                        button.textContent = '📲 Pantalla Completa (iOS)';
+                    }
+                    return;
+                }
+
                 if (button === ui.btnFullscreenHeader) {
                     button.innerHTML = wantsExit
                         ? '🡼 <span class="hidden sm:inline ml-1">Salir</span>'
                         : '⛶ <span class="hidden sm:inline ml-1">Pantalla</span>';
-                } else {
-                    button.textContent = wantsExit ? '🡼 Salir de Pantalla Completa' : '⛶ Pantalla Completa';
+                    return;
                 }
+
+                button.textContent = wantsExit ? '🡼 Salir de Pantalla Completa' : '⛶ Pantalla Completa';
             });
         }
 
+        async function lockLandscape() {
+            try {
+                if (!screen.orientation || typeof screen.orientation.lock !== 'function') return false;
+                await screen.orientation.lock('landscape');
+                return true;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        async function unlockOrientation() {
+            try {
+                if (!screen.orientation || typeof screen.orientation.unlock !== 'function') return;
+                screen.orientation.unlock();
+            } catch (error) {}
+        }
+
+        function showIOSFullscreenHelp() {
+            const lines = [
+                'En Safari iOS no existe pantalla completa real para juegos web.',
+                'La forma correcta es instalar el juego como App:',
+                '',
+                '1) Tocá Compartir (⬆️)',
+                '2) Elegí "Agregar a pantalla de inicio"',
+                '3) Abrí Super Miau desde el ícono',
+                '',
+                'Después girá el teléfono para jugar en horizontal.'
+            ];
+
+            showOverlay('📲', 'Pantalla completa en iOS', lines.join('\n'), 'Entendido ▶️', () => {
+                isPaused = false;
+                ui.gameOverlay.classList.add('hidden');
+                syncShellChrome();
+                lastTime = performance.now();
+                physicsAccumulator = 0;
+            }, true);
+        }
+
         async function toggleFullscreen() {
-            if (!supportsFullscreen()) return;
+            if (!supportsFullscreen()) {
+                if (isIOSBrowser()) {
+                    playSound('click');
+                    showIOSFullscreenHelp();
+                }
+                return;
+            }
             playSound('click');
             try {
                 if (isFullscreenActive()) {
-                    await document.exitFullscreen();
+                    await unlockOrientation();
+                    if (document.exitFullscreen) await document.exitFullscreen();
+                    else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
                 } else {
-                    await document.documentElement.requestFullscreen();
+                    const docEl = document.documentElement;
+                    if (docEl.requestFullscreen) await docEl.requestFullscreen();
+                    else if (docEl.webkitRequestFullscreen) await docEl.webkitRequestFullscreen();
+                    await lockLandscape();
                 }
             } catch (error) {
                 console.warn('No se pudo cambiar a pantalla completa.', error);
@@ -1252,12 +1330,13 @@
 
         function showHelpOverlay() {
             const isWater = currentLevel === 5;
+            const isIOS = isIOSBrowser();
             const lines = [
                 'Moverse: ⬅️➡️ o A/D',
                 'Saltar: ⬆️ o W o Espacio',
                 'Maullido Estelar: F o Shift (cuando tengas ⭐)',
                 isWater ? 'Bajar en agua: ⬇️ o S' : 'Pausa: P o Escape',
-                'Pantalla completa: botón ⛶'
+                isIOS ? 'iOS: pantalla completa es "Agregar a pantalla de inicio"' : 'Pantalla completa: botón ⛶'
             ].filter(Boolean);
             showOverlay('❔', 'Ayuda', lines.join('\n'), 'Volver ▶️', () => {
                 isPaused = false;
@@ -5755,6 +5834,7 @@
             setTimeout(resizeCanvas, 200);
         });
         document.addEventListener('fullscreenchange', updateFullscreenButtons);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenButtons);
 
         loadProgress();
 
