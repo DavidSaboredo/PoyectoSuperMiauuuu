@@ -8,6 +8,14 @@
 - Cambia de mundo en mundo con escenarios distintos: parque, bosque, colonia de bichos, lava, agua, castillo y una dimension final.
 - Guarda parte del progreso en tu computadora para que no pierdas tus huellas y mejoras.
 
+## Controles rapidos
+- Moverse: Flechas ⬅️➡️ o `A`/`D`
+- Saltar: Flecha ⬆️ o `W` o `Espacio`
+- Maullido Estelar (cuando tengas ⭐): `F` o `Shift`
+- Nivel 5 (agua): bajar con Flecha ⬇️ o `S`
+- Pausa: `P` o `Escape`
+- Pantalla completa: boton `⛶` (arriba) o `⛶ Pantalla Completa` (en movil)
+
 ## ¿Cómo funciona por dentro?
 - **La pantalla principal**:
   Cuando abres `index.html`, el juego muestra el menu, la tienda y los botones para empezar.
@@ -57,7 +65,7 @@ py -m http.server 8000
 ## ¿Que archivos quedaron en el proyecto?
 - `index.html`: el juego completo.
 - `README.md`: esta guia.
-- `Super_Miau_Android.apk`: una version empaquetada para Android.
+- `Super_Miau_Android.apk`: una version empaquetada para Android (no es necesaria para Vercel y puede quedar fuera del repo).
 - `vercel.json`: configuracion minima para desplegar el juego en Vercel.
 
 ## Ideas divertidas para modificar el juego

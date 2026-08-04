@@ -462,6 +462,9 @@
                 <button id="btnFullscreenHeader" type="button" onclick="toggleFullscreen()" class="bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/30 text-emerald-300 px-2.5 py-1 rounded-xl transition font-bold flex items-center justify-center text-[11px]" title="Pantalla completa">
                     ⛶ <span class="hidden sm:inline ml-1">Pantalla</span>
                 </button>
+                <button id="btnHelpHeader" type="button" onclick="showHelpOverlay()" class="bg-slate-950/80 hover:bg-slate-900 border border-slate-500/25 text-slate-200 px-2.5 py-1 rounded-xl transition font-bold flex items-center justify-center text-[11px]" title="Ayuda">
+                    ❔ <span class="hidden sm:inline ml-1">Ayuda</span>
+                </button>
                 <button id="btnPauseHeader" onclick="togglePause()" class="bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300 px-2.5 py-1 rounded-xl transition font-bold flex items-center justify-center text-[11px]" title="Pausar Juego">
                     ⏸️ <span class="hidden sm:inline ml-1">Pausa</span>
                 </button>
@@ -562,6 +565,9 @@
                 </button>
                 <button onclick="openShop()" class="w-full sm:flex-1 bg-slate-800 hover:bg-slate-700 text-yellow-300 font-extrabold text-lg py-3 px-8 rounded-2xl border-2 border-yellow-500/40 shadow-lg shadow-yellow-500/10 transform transition active:scale-95 flex items-center justify-center gap-2">
                     🎒 Tienda
+                </button>
+                <button onclick="showHelpOverlay()" class="w-full sm:flex-1 bg-slate-900 hover:bg-slate-800 text-slate-200 font-extrabold text-lg py-3 px-8 rounded-2xl border border-slate-700 shadow-lg shadow-black/10 transform transition active:scale-95 flex items-center justify-center gap-2">
+                    ❔ Ayuda
                 </button>
             </div>
         </div>
@@ -694,7 +700,7 @@
         <div id="gameOverlay" class="absolute inset-0 bg-slate-950/90 z-20 flex flex-col items-center justify-center p-6 text-center hidden rounded-3xl">
             <span id="overlayEmoji" class="text-7xl mb-4">🏆</span>
             <h3 id="overlayTitle" class="text-4xl md:text-5xl font-extrabold text-yellow-300 mb-2">¡Nivel Completado!</h3>
-            <p id="overlayMessage" class="text-indigo-200 mb-6 max-w-sm">¡Excelente trabajo regresando con vida!</p>
+            <p id="overlayMessage" class="text-indigo-200 mb-6 max-w-sm whitespace-pre-line">¡Excelente trabajo regresando con vida!</p>
             <div class="flex flex-col sm:flex-row gap-4">
                 <button id="overlayButton" onclick="transitionNext()" class="bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-bold py-3 px-10 rounded-2xl text-lg transition active:scale-95 shadow-lg shadow-emerald-500/20">
                     Siguiente Nivel ➡️
@@ -833,6 +839,7 @@
             btnJumpIcon: document.getElementById('btnJumpIcon'),
             btnJumpText: document.getElementById('btnJumpText'),
             btnFullscreenHeader: document.getElementById('btnFullscreenHeader'),
+            btnHelpHeader: document.getElementById('btnHelpHeader'),
             btnFullscreenMobile: document.getElementById('btnFullscreenMobile'),
             mobileControls: document.getElementById('mobileControls'),
             pageFooter: document.getElementById('pageFooter'),
@@ -1217,9 +1224,14 @@
             buttons.forEach(button => {
                 button.classList.toggle('hidden', !supported);
                 if (!supported) return;
-                button.textContent = isFullscreenActive()
-                    ? '🡼 Salir de Pantalla Completa'
-                    : '⛶ Pantalla Completa';
+                const wantsExit = isFullscreenActive();
+                if (button === ui.btnFullscreenHeader) {
+                    button.innerHTML = wantsExit
+                        ? '🡼 <span class="hidden sm:inline ml-1">Salir</span>'
+                        : '⛶ <span class="hidden sm:inline ml-1">Pantalla</span>';
+                } else {
+                    button.textContent = wantsExit ? '🡼 Salir de Pantalla Completa' : '⛶ Pantalla Completa';
+                }
             });
         }
 
@@ -1236,6 +1248,24 @@
                 console.warn('No se pudo cambiar a pantalla completa.', error);
             }
             updateFullscreenButtons();
+        }
+
+        function showHelpOverlay() {
+            const isWater = currentLevel === 5;
+            const lines = [
+                'Moverse: ⬅️➡️ o A/D',
+                'Saltar: ⬆️ o W o Espacio',
+                'Maullido Estelar: F o Shift (cuando tengas ⭐)',
+                isWater ? 'Bajar en agua: ⬇️ o S' : 'Pausa: P o Escape',
+                'Pantalla completa: botón ⛶'
+            ].filter(Boolean);
+            showOverlay('❔', 'Ayuda', lines.join('\n'), 'Volver ▶️', () => {
+                isPaused = false;
+                ui.gameOverlay.classList.add('hidden');
+                syncShellChrome();
+                lastTime = performance.now();
+                physicsAccumulator = 0;
+            }, true);
         }
 
         // Cambia el texto narrativo visible para que coincida con la escena que se esta reproduciendo.
