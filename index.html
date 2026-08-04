@@ -56,6 +56,22 @@
             border-color: #f97316;
             box-shadow: 0 2px 4px rgba(0,0,0,0.4), 0 0 15px rgba(249, 115, 22, 0.4);
         }
+        @media (max-width: 640px) {
+            #mobileControls {
+                max-width: 100%;
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+                padding-bottom: 0.9rem;
+            }
+            #mobileControls .touch-btn {
+                min-width: 4.75rem;
+                min-height: 4.75rem;
+            }
+            #mobileControls #btnJump {
+                min-width: 5.5rem;
+                min-height: 5.5rem;
+            }
+        }
         /* Estilo para barra de scroll de historia */
         .scroll-story::-webkit-scrollbar {
             width: 6px;
@@ -443,6 +459,9 @@
 
             <!-- Botones de Control (Pausa / Menú) -->
             <div class="flex gap-1.5 md:ml-1">
+                <button id="btnFullscreenHeader" type="button" onclick="toggleFullscreen()" class="bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/30 text-emerald-300 px-2.5 py-1 rounded-xl transition font-bold flex items-center justify-center text-[11px]" title="Pantalla completa">
+                    ⛶ <span class="hidden sm:inline ml-1">Pantalla</span>
+                </button>
                 <button id="btnPauseHeader" onclick="togglePause()" class="bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300 px-2.5 py-1 rounded-xl transition font-bold flex items-center justify-center text-[11px]" title="Pausar Juego">
                     ⏸️ <span class="hidden sm:inline ml-1">Pausa</span>
                 </button>
@@ -496,7 +515,9 @@
             <div class="bg-slate-900/50 border border-slate-800 rounded-xl px-3 py-3 mb-4 max-w-xl w-full text-xs text-indigo-300 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-center">
                 <span class="rounded-lg bg-slate-950/40 px-3 py-1">Moverse: ⬅️ ➡️ / A D</span>
                 <span class="rounded-lg bg-slate-950/40 px-3 py-1">Saltar: ⬆️ / W / Espacio</span>
-                <span class="rounded-lg bg-slate-950/40 px-3 py-1">Maullido: F / S / Shift ⚡</span>
+                <span class="rounded-lg bg-slate-950/40 px-3 py-1">Maullido: F / Shift ⚡</span>
+                <span class="rounded-lg bg-slate-950/40 px-3 py-1">Bajar en agua: ⬇️ / S 🫧</span>
+                <span class="rounded-lg bg-slate-950/40 px-3 py-1">Pantalla completa: ⛶</span>
             </div>
 
             <div class="mb-4 flex w-full max-w-2xl flex-wrap items-center justify-center gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-950/20 px-4 py-3 text-[11px] font-bold text-emerald-200">
@@ -726,7 +747,8 @@
     </main>
 
     <!-- PANEL DE CONTROLES TÁCTILES PARA MÓVILES (Responsivo) -->
-    <div id="mobileControls" class="w-full max-w-lg mx-auto px-4 pb-4 z-10 lg:hidden select-none">
+    <div id="mobileControls" class="w-full max-w-xl mx-auto px-4 pb-4 z-10 lg:hidden select-none">
+        <div class="flex flex-col gap-3">
         <div class="flex justify-between items-center gap-4">
             <!-- D-Pad (Izquierda / Derecha y descenso en el agua) -->
             <div class="flex gap-3">
@@ -753,6 +775,10 @@
                     <span id="btnJumpText">SALTAR</span>
                 </button>
             </div>
+        </div>
+            <button id="btnFullscreenMobile" type="button" onclick="toggleFullscreen()" class="touch-btn w-full rounded-2xl px-4 py-3 text-sm font-extrabold text-emerald-200 border-emerald-500/30">
+                ⛶ Pantalla Completa
+            </button>
         </div>
     </div>
 
@@ -806,6 +832,8 @@
             btnDown: document.getElementById('btnDown'),
             btnJumpIcon: document.getElementById('btnJumpIcon'),
             btnJumpText: document.getElementById('btnJumpText'),
+            btnFullscreenHeader: document.getElementById('btnFullscreenHeader'),
+            btnFullscreenMobile: document.getElementById('btnFullscreenMobile'),
             mobileControls: document.getElementById('mobileControls'),
             pageFooter: document.getElementById('pageFooter'),
             startScreenWallet: document.getElementById('startScreenWallet'),
@@ -1146,11 +1174,19 @@
             syncShellChrome();
         }
 
+        function resetInputState() {
+            keys = {};
+            player.jumpHeld = false;
+            player.jumpHoldFrames = 0;
+            player.isMoving = false;
+        }
+
         // Oculta elementos de la carcasa externa cuando una pantalla completa
         // (menu, pausa, cinematica o creditos) toma el foco visual del juego.
         function syncShellChrome() {
             const blockingScreenVisible =
                 !ui.startScreen.classList.contains('hidden') ||
+                !ui.shopScreen.classList.contains('hidden') ||
                 !ui.gameOverlay.classList.contains('hidden') ||
                 !ui.creditsScreen.classList.contains('hidden') ||
                 cutsceneActive;
@@ -1161,6 +1197,45 @@
             if (ui.pageFooter) {
                 ui.pageFooter.classList.toggle('hidden', blockingScreenVisible);
             }
+        }
+
+        function supportsFullscreen() {
+            return !!(
+                document.fullscreenEnabled &&
+                document.documentElement &&
+                typeof document.documentElement.requestFullscreen === 'function'
+            );
+        }
+
+        function isFullscreenActive() {
+            return !!document.fullscreenElement;
+        }
+
+        function updateFullscreenButtons() {
+            const buttons = [ui.btnFullscreenHeader, ui.btnFullscreenMobile].filter(Boolean);
+            const supported = supportsFullscreen();
+            buttons.forEach(button => {
+                button.classList.toggle('hidden', !supported);
+                if (!supported) return;
+                button.textContent = isFullscreenActive()
+                    ? '🡼 Salir de Pantalla Completa'
+                    : '⛶ Pantalla Completa';
+            });
+        }
+
+        async function toggleFullscreen() {
+            if (!supportsFullscreen()) return;
+            playSound('click');
+            try {
+                if (isFullscreenActive()) {
+                    await document.exitFullscreen();
+                } else {
+                    await document.documentElement.requestFullscreen();
+                }
+            } catch (error) {
+                console.warn('No se pudo cambiar a pantalla completa.', error);
+            }
+            updateFullscreenButtons();
         }
 
         // Cambia el texto narrativo visible para que coincida con la escena que se esta reproduciendo.
@@ -2760,6 +2835,7 @@
             const consumeShopLoadout = useShopLoadout && options.consumeShopLoadout !== false;
 
             playSound('victory');
+            resetInputState();
             gameTick = 0;
             currentLevel = startLevel;
             player.x = 100;
@@ -2845,7 +2921,9 @@
         // Lleva al jugador al siguiente nivel o al cierre de la aventura cuando corresponde.
         function transitionNext() {
             playSound('click');
+            resetInputState();
             ui.gameOverlay.classList.add('hidden');
+            syncShellChrome();
 
             if (currentLevel < 7) {
                 grantInterLevelReward(currentLevel);
@@ -2872,6 +2950,7 @@
                 lastTime = performance.now();
                 physicsAccumulator = 0;
                 animationFrameId = requestAnimationFrame(loop);
+                syncShellChrome();
             } else {
                 gameActive = false;
                 resetToMain();
@@ -2880,6 +2959,7 @@
 
         // Devuelve al menu principal y restablece el estado visual basico.
         function resetToMain() {
+            resetInputState();
             if (cutsceneAnimationFrameId) cancelAnimationFrame(cutsceneAnimationFrameId);
             cutsceneAnimationFrameId = null;
             cutsceneActive = false;
@@ -2991,6 +3071,7 @@
 
         function showCreditsScreen() {
             gameActive = false;
+            resetInputState();
             if (animationFrameId) {
                 cancelAnimationFrame(animationFrameId);
                 animationFrameId = null;
@@ -3323,6 +3404,7 @@
                 () => {
                     isPaused = false;
                     ui.gameOverlay.classList.add('hidden');
+                    syncShellChrome();
                     lastTime = performance.now();
                     physicsAccumulator = 0;
                 }, 
@@ -3333,6 +3415,7 @@
         // Sale de la partida y vuelve al menu principal limpiando overlays y animaciones.
         function goToMainMenu() {
             playSound('click');
+            resetInputState();
             gameActive = false;
             isPaused = false;
             cutsceneActive = false;
@@ -3375,10 +3458,10 @@
                 return;
             }
             keys[e.key] = true;
-            if (['Space', ' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+            if (['Space', ' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) || (currentLevel === 5 && (e.key === 's' || e.key === 'S'))) {
                 e.preventDefault();
             }
-            if ((e.key === 'f' || e.key === 'F' || e.key === 's' || e.key === 'S' || e.key === 'Shift') && player.powerup === 'lightning' && player.shootCooldown === 0) {
+            if ((e.key === 'f' || e.key === 'F' || e.key === 'Shift') && player.powerup === 'lightning' && player.shootCooldown === 0) {
                 shootLightning();
             }
             if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
@@ -3388,19 +3471,23 @@
         window.addEventListener('keyup', e => {
             keys[e.key] = false;
         });
+        window.addEventListener('blur', resetInputState);
 
         // Inputs Táctiles
         // Conecta los botones tactiles con las mismas teclas virtuales usadas por teclado.
         function setupTouch(btnId, keyName) {
             const el = document.getElementById(btnId);
-            el.addEventListener('touchstart', (e) => {
+            const activate = (e) => {
                 e.preventDefault();
                 keys[keyName] = true;
-            });
-            el.addEventListener('touchend', (e) => {
+            };
+            const release = (e) => {
                 e.preventDefault();
                 keys[keyName] = false;
-            });
+            };
+            el.addEventListener('touchstart', activate, { passive: false });
+            el.addEventListener('touchend', release, { passive: false });
+            el.addEventListener('touchcancel', release, { passive: false });
         }
         setupTouch('btnLeft', 'ArrowLeft');
         setupTouch('btnRight', 'ArrowRight');
@@ -3599,7 +3686,7 @@
             const leftPressed = keys['ArrowLeft'] || keys['a'] || keys['A'];
             const rightPressed = keys['ArrowRight'] || keys['d'] || keys['D'];
             const upPressed = keys['ArrowUp'] || keys['w'] || keys['W'] || keys[' '];
-            const downPressed = keys['ArrowDown'];
+            const downPressed = keys['ArrowDown'] || (isWater && (keys['s'] || keys['S']));
             const horizontalInput = (rightPressed ? 1 : 0) - (leftPressed ? 1 : 0);
             player.isMoving = horizontalInput !== 0 || (isWater && (upPressed || downPressed));
 
@@ -4835,6 +4922,60 @@
                 });
             }
 
+            if (currentLevel === 5) {
+                const waterIntroAge = gameTick - levelStartedAt;
+                const shouldShowBubbleHint = waterIntroAge < 420 || player.oxygen < 60;
+                const nearestBubble = bubbles.reduce((closest, bubble) => {
+                    if (!bubble.available) return closest;
+                    const distance = Math.abs((bubble.x + bubble.width / 2) - (player.x + player.width / 2)) + Math.abs((bubble.y + bubble.height / 2) - (player.y + player.height / 2));
+                    if (!closest || distance < closest.distance) {
+                        return { bubble, distance };
+                    }
+                    return closest;
+                }, null);
+
+                if (shouldShowBubbleHint) {
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(3, 17, 34, 0.8)';
+                    ctx.fillRect(170, 20, 460, 70);
+                    ctx.strokeStyle = '#67e8f9';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(170, 20, 460, 70);
+                    ctx.textAlign = 'center';
+                    ctx.fillStyle = '#cffafe';
+                    ctx.font = 'bold 14px Fredoka';
+                    ctx.fillText('NIVEL ACUÁTICO', 400, 42);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 20px Fredoka';
+                    ctx.fillText('Buscá burbujas +AIRE para no ahogarte', 400, 64);
+                    ctx.fillStyle = '#a5f3fc';
+                    ctx.font = '12px Fredoka';
+                    ctx.fillText('Podés bajar con S o con el botón ⬇️', 400, 82);
+                    ctx.restore();
+                }
+
+                if (nearestBubble && player.oxygen < 58) {
+                    const bubbleScreenX = nearestBubble.bubble.x - cameraX + nearestBubble.bubble.width / 2;
+                    const clampedX = Math.max(70, Math.min(canvas.width - 70, bubbleScreenX));
+                    const arrowDirection = bubbleScreenX < 70 ? -1 : (bubbleScreenX > canvas.width - 70 ? 1 : 0);
+
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(6, 24, 38, 0.86)';
+                    ctx.fillRect(clampedX - 74, 96, 148, 48);
+                    ctx.strokeStyle = '#22d3ee';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(clampedX - 74, 96, 148, 48);
+                    ctx.textAlign = 'center';
+                    ctx.fillStyle = '#ecfeff';
+                    ctx.font = 'bold 12px Fredoka';
+                    ctx.fillText('BURBUJA DE AIRE', clampedX, 114);
+                    ctx.fillStyle = '#67e8f9';
+                    ctx.font = 'bold 18px Fredoka';
+                    ctx.fillText(arrowDirection < 0 ? '⬅️' : (arrowDirection > 0 ? '➡️' : '⬇️'), clampedX, 134);
+                    ctx.restore();
+                }
+            }
+
             // Ocultar el portal final de nivel en el Castillo (Nivel 6)
             if (currentLevel !== 6) {
                 let fX = flagpole.x - cameraX;
@@ -5560,6 +5701,7 @@
 
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
+                resetInputState();
                 if (animationFrameId) {
                     cancelAnimationFrame(animationFrameId);
                     animationFrameId = null;
@@ -5582,6 +5724,7 @@
         window.addEventListener('orientationchange', () => {
             setTimeout(resizeCanvas, 200);
         });
+        document.addEventListener('fullscreenchange', updateFullscreenButtons);
 
         loadProgress();
 
@@ -5593,6 +5736,7 @@
             toggleDeveloperPanel(false);
             populateDeveloperLevelOptions();
             updateShopUI();
+            updateFullscreenButtons();
         };
     </script>
 </body>
