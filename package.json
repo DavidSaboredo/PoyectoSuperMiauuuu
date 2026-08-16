@@ -1,0 +1,13 @@
+{
+  "name": "super-miau",
+  "version": "23.1.0",
+  "private": true,
+  "description": "Juego de plataformas 2D para navegador.",
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "start": "node scripts/serve.mjs",
+    "check": "node --check js/config.js && node --check js/data/levels.js && node --check js/render/effects.js && node --check js/render/backgrounds.js && node --check js/render/entities.js && node --check js/render/hud.js && node --check js/audio.js && node --check js/game.js && node scripts/validate.mjs",
+    "test": "npm run check"
+  },
+  "engines": { "node": ">=18" }
+}

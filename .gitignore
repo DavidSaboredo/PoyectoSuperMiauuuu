@@ -2,4 +2,7 @@
 Thumbs.db
 .vercel
 .vscode/settings.json
-
+node_modules/
+npm-debug.log*
+coverage/
+dist/
