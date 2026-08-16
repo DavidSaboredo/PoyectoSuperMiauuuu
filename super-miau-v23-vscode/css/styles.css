@@ -1,0 +1,326 @@
+        body {
+            font-family: 'Fredoka', sans-serif;
+            touch-action: manipulation;
+            background:
+                radial-gradient(circle at 18% 12%, rgba(14,165,233,.11), transparent 28%),
+                radial-gradient(circle at 82% 8%, rgba(249,115,22,.09), transparent 24%),
+                linear-gradient(180deg, #020617 0%, #07101f 48%, #020617 100%);
+        }
+        body.game-active {
+            overflow: hidden;
+        }
+        body.game-active main {
+            padding-bottom: 9.75rem;
+        }
+        body.game-active #mobileControls {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding-bottom: calc(0.9rem + env(safe-area-inset-bottom));
+            background: linear-gradient(to top, rgba(2,6,23,0.96), rgba(2,6,23,0.25));
+            backdrop-filter: blur(10px);
+        }
+        body.game-active #pageFooter {
+            display: none !important;
+        }
+        #gameCanvas {
+            image-rendering: auto;
+            box-shadow: 0 24px 70px rgba(15, 23, 42, 0.68), 0 0 45px rgba(56, 189, 248, 0.16);
+            background: linear-gradient(to bottom, #080711, #130b24);
+            position: relative;
+        }
+        .png-v3-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            border: 1px solid rgba(250, 204, 21, .55);
+            border-radius: 999px;
+            padding: .3rem .65rem;
+            color: #fef08a;
+            background: linear-gradient(135deg, rgba(120,53,15,.9), rgba(67,20,7,.88));
+            box-shadow: 0 0 20px rgba(249,115,22,.18), inset 0 1px 0 rgba(255,255,255,.12);
+            font-size: .68rem;
+            font-weight: 800;
+            letter-spacing: .08em;
+            white-space: nowrap;
+        }
+        .start-cat-stage {
+            position: relative;
+            display: grid;
+            place-items: center;
+            width: min(100%, 520px);
+            min-height: 150px;
+            margin-bottom: .75rem;
+            overflow: hidden;
+            border: 1px solid rgba(251,146,60,.35);
+            border-radius: 1.5rem;
+            background:
+                radial-gradient(circle at 50% 60%, rgba(249,115,22,.22), transparent 38%),
+                radial-gradient(circle at 50% 105%, rgba(250,204,21,.18), transparent 38%),
+                linear-gradient(145deg, rgba(30,41,59,.96), rgba(2,6,23,.96));
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 18px 45px rgba(0,0,0,.3);
+        }
+        .start-cat-stage::before {
+            content: "";
+            position: absolute;
+            inset: auto 9% 15px;
+            height: 17px;
+            border-radius: 50%;
+            background: radial-gradient(ellipse, rgba(2,6,23,.72), transparent 68%);
+            filter: blur(2px);
+        }
+        .start-cat-preview {
+            position: relative;
+            z-index: 1;
+            display: block;
+            width: auto;
+            height: 108px;
+            object-fit: contain;
+            filter: drop-shadow(0 14px 12px rgba(0,0,0,.45)) drop-shadow(0 0 16px rgba(249,115,22,.18));
+            animation: png-cat-float 2.8s ease-in-out infinite;
+        }
+        .sprite-load-status {
+            position: absolute;
+            right: .75rem;
+            bottom: .65rem;
+            z-index: 2;
+            border: 1px solid rgba(56,189,248,.3);
+            border-radius: 999px;
+            padding: .25rem .55rem;
+            background: rgba(2,6,23,.82);
+            color: #bae6fd;
+            font-size: .66rem;
+            font-weight: 800;
+        }
+        .sprite-load-status.ready {
+            border-color: rgba(52,211,153,.45);
+            color: #a7f3d0;
+        }
+        .sprite-load-status.error {
+            border-color: rgba(251,113,133,.5);
+            color: #fecdd3;
+        }
+        @keyframes png-cat-float {
+            0%, 100% { transform: translateY(2px) rotate(-1deg); }
+            50% { transform: translateY(-5px) rotate(1deg); }
+        }
+        /* Marco cinematografico 2.5D: conserva el canvas liviano, pero evita
+           que la presentacion se perciba como una pantalla retro generica. */
+        .arcade-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1.5rem;
+            background: #050816;
+            box-shadow:
+                0 28px 70px rgba(0,0,0,.48),
+                inset 0 1px 0 rgba(255,255,255,.12),
+                0 0 0 1px rgba(125,211,252,.12);
+        }
+        .arcade-container::before {
+            content: "";
+            position: absolute;
+            z-index: 4;
+            inset: 0;
+            pointer-events: none;
+            border-radius: inherit;
+            box-shadow: inset 0 0 42px rgba(2,6,23,.5), inset 0 1px 0 rgba(255,255,255,.12);
+        }
+        .arcade-container::after {
+            content: "";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background:
+                linear-gradient(115deg, rgba(255,255,255,.07), transparent 22%, transparent 72%, rgba(125,211,252,.035)),
+                radial-gradient(circle at 50% 42%, transparent 60%, rgba(2,6,23,.28));
+            z-index: 5;
+            pointer-events: none;
+            opacity: 1;
+        }
+        /* Botones táctiles premium */
+        .touch-btn {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.3), inset 0 2px 3px rgba(255,255,255,0.1);
+            border: 2px solid #334155;
+            transition: all 0.1s ease;
+        }
+        .touch-btn:active {
+            transform: scale(0.9);
+            border-color: #f97316;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4), 0 0 15px rgba(249, 115, 22, 0.4);
+        }
+        @media (max-width: 640px) {
+            #mobileControls {
+                max-width: 100%;
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+                padding-bottom: 0.9rem;
+            }
+            #mobileControls .touch-btn {
+                min-width: 4.75rem;
+                min-height: 4.75rem;
+            }
+            #mobileControls #btnJump {
+                min-width: 5.5rem;
+                min-height: 5.5rem;
+            }
+        }
+        /* Estilo para barra de scroll de historia */
+        .scroll-story::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scroll-story::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 10px;
+        }
+        .scroll-story::-webkit-scrollbar-thumb {
+            background: #6366f1;
+            border-radius: 10px;
+        }
+        /* Cinemática de apertura: se dibuja íntegramente en canvas para que
+           conserve el estilo del juego y funcione sin archivos de video. */
+        .cutscene-frame {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            overflow: hidden;
+            border-radius: 1.25rem;
+            border: 3px solid rgba(99, 102, 241, 0.55);
+            background: #030712;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.7), 0 0 35px rgba(99, 102, 241, 0.22);
+        }
+        #cutsceneCanvas {
+            display: block;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #050816;
+        }
+        .cutscene-frame::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(circle at center, transparent 52%, rgba(2, 6, 23, 0.62) 100%);
+        }
+        .cutscene-caption {
+            position: absolute;
+            z-index: 2;
+            left: 4%;
+            right: 4%;
+            bottom: 4%;
+            min-height: 76px;
+            padding: 12px 18px 13px;
+            border: 1px solid rgba(129, 140, 248, 0.65);
+            border-radius: 15px;
+            background: linear-gradient(90deg, rgba(2, 6, 23, 0.94), rgba(15, 23, 42, 0.88));
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+            text-align: left;
+        }
+        .cutscene-caption.is-changing {
+            animation: caption-in 0.38s ease-out;
+        }
+        @keyframes caption-in {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 640px) {
+            .cutscene-caption {
+                min-height: 62px;
+                padding: 8px 11px;
+                border-radius: 11px;
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .cutscene-caption.is-changing { animation: none; }
+        }
+        .credits-sky {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        .credits-sky::before,
+        .credits-sky::after {
+            content: "";
+            position: absolute;
+            inset: -20%;
+            background-repeat: repeat;
+        }
+        .credits-sky::before {
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(255,255,255,0.95) 0 1.2px, transparent 1.7px),
+                radial-gradient(circle at 70% 25%, rgba(125,211,252,0.9) 0 1.4px, transparent 1.9px),
+                radial-gradient(circle at 40% 80%, rgba(167,243,208,0.9) 0 1.1px, transparent 1.7px),
+                radial-gradient(circle at 80% 70%, rgba(224,231,255,0.8) 0 1.2px, transparent 1.8px);
+            background-size: 210px 210px, 280px 280px, 240px 240px, 320px 320px;
+            opacity: 0.6;
+            animation: credits-drift 18s linear infinite;
+        }
+        .credits-sky::after {
+            background:
+                radial-gradient(circle at 30% 35%, rgba(45, 212, 191, 0.22), transparent 28%),
+                radial-gradient(circle at 72% 28%, rgba(96, 165, 250, 0.18), transparent 26%),
+                radial-gradient(circle at 58% 70%, rgba(167, 139, 250, 0.18), transparent 24%);
+            animation: credits-breathe 7s ease-in-out infinite;
+        }
+        .credits-card-glow {
+            animation: credits-breathe 5.5s ease-in-out infinite;
+        }
+        @keyframes credits-drift {
+            from { transform: translate3d(0, 0, 0); }
+            to { transform: translate3d(0, 22px, 0); }
+        }
+        @keyframes credits-breathe {
+            0%, 100% { opacity: 0.75; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.02); }
+        }
+        .hud-pill {
+            min-height: 2rem;
+            flex-shrink: 0;
+            backdrop-filter: blur(12px);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 8px 24px rgba(2,6,23,.22);
+        }
+        .hud-level-name {
+            display: inline-block;
+            max-width: min(38vw, 220px);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            vertical-align: bottom;
+        }
+        @media (max-width: 768px) {
+            .hud-level-name {
+                max-width: 48vw;
+            }
+        }
+        .hidden {
+            display: none !important;
+        }
+        /* La visibilidad de la cinemática no depende de Tailwind. Esto evita
+           que el prólogo quede oculto si el HTML se abre como archivo local y
+           la hoja de estilos externa tarda en cargar o no está disponible. */
+        #cutsceneScreen {
+            display: none !important;
+            position: absolute;
+            inset: 0;
+            z-index: 30;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            padding: 0.5rem;
+            text-align: center;
+            border-radius: 1.5rem;
+            background: rgba(2, 6, 23, 0.985);
+        }
+        #cutsceneScreen.cutscene-active {
+            display: flex !important;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .credits-sky::before,
+            .credits-sky::after,
+            .credits-card-glow {
+                animation: none;
+            }
+        }
