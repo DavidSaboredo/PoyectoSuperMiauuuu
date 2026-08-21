@@ -286,6 +286,7 @@ function getDecorationApproxWidth(deco) {
         case 'lightray':
         case 'lightray_purple':
         case 'lightray_red':
+        case 'lightray_rift':
             return (deco.width || 90) + 380;
         case 'spooky_tree': return 70;
         case 'city_skyline': return 1700;
@@ -1350,14 +1351,14 @@ function initBackground() {
     } else if (currentLevel === 6 && levelSixSection === 2) {
         // 6.2 usa exclusivamente batallafinal1/2/3, sin el castillo procedural anterior.
     } else if (currentLevel === 7) {
-        // Luces rojas de alarma de colapso
+        // Haces del cielo quebrado: acompañan la paleta clara de salida1–4.
         for (let i = 0; i < getDecorationCount(15, 8, 5); i++) {
             backgroundDecorations.push({
                 x: i * 250 + Math.random() * 80,
                 y: 100 + Math.random() * 120,
                 width: 50 + Math.random() * 50,
                 angle: -30 * (Math.PI / 180),
-                type: 'lightray_red',
+                type: 'lightray_rift',
                 depth: 0.2
             });
         }
@@ -6658,9 +6659,14 @@ function renderGame() {
             ctx.closePath();
             ctx.fill();
             ctx.restore();
-        } else if (deco.type === 'lightray_red') {
+        } else if (deco.type === 'lightray_red' || deco.type === 'lightray_rift') {
             ctx.save();
-            ctx.fillStyle = useMediumVisualEffects() ? 'rgba(239, 68, 68, 0.14)' : 'rgba(239, 68, 68, 0.08)';
+            const rayAlpha = useMediumVisualEffects() ? 0.12 : 0.07;
+            const rayGradient = ctx.createLinearGradient(drawX, 0, drawX + 110, canvas.height);
+            rayGradient.addColorStop(0, `rgba(224, 242, 254, ${rayAlpha})`);
+            rayGradient.addColorStop(0.52, `rgba(125, 211, 252, ${rayAlpha * 0.72})`);
+            rayGradient.addColorStop(1, 'rgba(196, 181, 253, 0)');
+            ctx.fillStyle = rayGradient;
             ctx.beginPath();
             ctx.moveTo(drawX, 0);
             ctx.lineTo(drawX + deco.width, 0);
@@ -7944,6 +7950,7 @@ function renderGame() {
 
     // Bruma, luz de borde y viñeta suave unen las capas del escenario.
     drawForegroundDepth();
+    drawFinalLevelLighting();
     drawLevelOneStormOverlay();
     drawVampireBattleHud();
 

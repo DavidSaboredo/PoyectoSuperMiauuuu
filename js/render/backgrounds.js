@@ -243,6 +243,50 @@ function drawForegroundDepth() {
     ctx.restore();
 }
 
+// Iluminación narrativa de la Dimensión Quebrada. La intensidad aumenta al
+// acercarse al portal y une los fondos salida1–4 con personajes y plataformas.
+function drawFinalLevelLighting() {
+    if (currentLevel !== 7) return;
+
+    const maxCameraX = Math.max(1, LEVEL_WIDTH - canvas.width);
+    const progress = Math.max(0, Math.min(1, cameraX / maxCameraX));
+    const calmPulse = 0.92 + Math.sin(gameTick * 0.018) * 0.08;
+    const portalScreenX = flagpole.x + flagpole.width / 2 - cameraX;
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+
+    // La gran abertura del cielo ilumina desde arriba sin blanquear el HUD.
+    const skyGlow = ctx.createRadialGradient(400, -25, 28, 400, 25, 430);
+    skyGlow.addColorStop(0, `rgba(255, 255, 255, ${0.22 * calmPulse})`);
+    skyGlow.addColorStop(0.28, `rgba(186, 230, 253, ${0.16 * calmPulse})`);
+    skyGlow.addColorStop(0.68, `rgba(196, 181, 253, ${0.07 * calmPulse})`);
+    skyGlow.addColorStop(1, 'rgba(125, 211, 252, 0)');
+    ctx.fillStyle = skyGlow;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Rebote de luz en el camino: separa patas y plataformas del fondo.
+    const groundGlow = ctx.createLinearGradient(0, 270, 0, canvas.height);
+    groundGlow.addColorStop(0, 'rgba(125, 211, 252, 0)');
+    groundGlow.addColorStop(0.72, `rgba(186, 230, 253, ${0.035 + progress * 0.025})`);
+    groundGlow.addColorStop(1, `rgba(167, 243, 208, ${0.08 + progress * 0.045})`);
+    ctx.fillStyle = groundGlow;
+    ctx.fillRect(0, 250, canvas.width, 200);
+
+    // El destino gana presencia gradualmente cuando entra en cámara.
+    if (portalScreenX > -240 && portalScreenX < canvas.width + 240) {
+        const destinationGlow = ctx.createRadialGradient(portalScreenX, 292, 12, portalScreenX, 292, 215);
+        destinationGlow.addColorStop(0, `rgba(255, 255, 255, ${0.18 * calmPulse})`);
+        destinationGlow.addColorStop(0.25, `rgba(110, 231, 183, ${0.14 + progress * 0.08})`);
+        destinationGlow.addColorStop(0.6, 'rgba(103, 232, 249, 0.055)');
+        destinationGlow.addColorStop(1, 'rgba(103, 232, 249, 0)');
+        ctx.fillStyle = destinationGlow;
+        ctx.fillRect(portalScreenX - 220, 70, 440, 380);
+    }
+
+    ctx.restore();
+}
+
 // La tormenta es un rasgo narrativo de TODO el capítulo 1. Esta capa
 // común evita que 1.1, 1.2 o 1.3 puedan volver a verse como de día al
 // cambiar el fondo particular de cada sección.
