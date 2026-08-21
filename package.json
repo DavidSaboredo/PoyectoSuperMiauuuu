@@ -6,8 +6,23 @@
   "scripts": {
     "dev": "node scripts/serve.mjs",
     "start": "node scripts/serve.mjs",
+    "css:build": "tailwindcss -i scripts/tailwind.input.css -o css/tailwind.generated.css --minify",
+    "web:build": "npm run css:build && node scripts/build-web.mjs",
+    "vercel:build": "npm run css:build && node scripts/build-vercel.mjs",
+    "android:add": "npm run web:build && node -r ./scripts/windows-userinfo-shim.cjs ./node_modules/@capacitor/cli/bin/capacitor add android",
+    "android:sync": "npm run web:build && node -r ./scripts/windows-userinfo-shim.cjs ./node_modules/@capacitor/cli/bin/capacitor sync android",
+    "android:open": "node -r ./scripts/windows-userinfo-shim.cjs ./node_modules/@capacitor/cli/bin/capacitor open android",
+    "apk:debug": "npm run android:sync && node scripts/build-apk.mjs",
     "check": "node --check js/config.js && node --check js/data/levels.js && node --check js/render/effects.js && node --check js/render/backgrounds.js && node --check js/render/entities.js && node --check js/render/hud.js && node --check js/audio.js && node --check js/game.js && node scripts/validate.mjs",
     "test": "npm run check"
   },
-  "engines": { "node": ">=18" }
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/core": "^7.4.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3",
+    "tailwindcss": "^3.4.17"
+  },
+  "engines": { "node": ">=20" }
 }

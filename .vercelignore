@@ -1,0 +1,10 @@
+android
+dist
+docs
+node_modules
+scripts
+.git
+.vscode
+capacitor.config.json
+package-lock.json
+tailwind.config.js

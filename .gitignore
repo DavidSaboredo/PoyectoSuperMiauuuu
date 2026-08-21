@@ -6,3 +6,8 @@ node_modules/
 npm-debug.log*
 coverage/
 dist/
+www/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties

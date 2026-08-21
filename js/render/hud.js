@@ -51,23 +51,33 @@ function refreshLevelHud() {
 // Actualiza el indicador visual del poder activo del jugador.
 function updatePowerBadge() {
     const sprayActive = currentLevel === 2 && levelTwoSection === 3 && player.batSprayOwned;
+    const dragonFireActive = ((currentLevel === 5 && levelFiveSection === 3) || (currentLevel === 6 && levelSixSection === 1)) && !!dragonBoss?.mounted;
     const actionIcon = ui.btnShoot.querySelector('span:first-child');
     const actionLabel = ui.btnShoot.querySelector('span:last-child');
-    if (actionIcon) actionIcon.textContent = sprayActive ? '🧴' : '⭐';
-    if (actionLabel) actionLabel.textContent = sprayActive ? 'AEROSOL' : 'ESTELAR';
+    if (actionIcon) actionIcon.textContent = dragonFireActive ? '🔥' : sprayActive ? '🧴' : '⭐';
+    if (actionLabel) actionLabel.textContent = dragonFireActive ? 'FUEGO' : sprayActive ? 'AEROSOL' : 'ESTELAR';
 
-    if (sprayActive) {
+    if (dragonFireActive) {
+        ui.powerBadge.classList.remove('hidden');
+        ui.powerBadge.className = "hud-pill bg-orange-950/70 px-3 py-1 rounded-full border border-orange-400/50 text-orange-200 font-bold flex items-center gap-1 animate-pulse";
+        ui.powerIcon.textContent = '🔥';
+        ui.powerText.textContent = 'Fuego de dragón';
+        ui.powerTimerText.classList.add('hidden');
+        ui.btnShoot.classList.remove('opacity-40', 'text-gray-500', 'text-cyan-300', 'text-emerald-300');
+        ui.btnShoot.classList.add('text-orange-300');
+    } else if (sprayActive) {
         ui.powerBadge.classList.remove('hidden');
         ui.powerBadge.className = "hud-pill bg-emerald-950/70 px-3 py-1 rounded-full border border-emerald-400/50 text-emerald-200 font-bold flex items-center gap-1 animate-pulse";
         ui.powerIcon.textContent = '🧴';
         ui.powerText.textContent = 'Anti-murciélagos';
         ui.powerTimerText.classList.add('hidden');
         ui.btnShoot.classList.remove('opacity-40', 'text-gray-500', 'text-cyan-300');
+        ui.btnShoot.classList.remove('text-orange-300');
         ui.btnShoot.classList.add('text-emerald-300');
     } else if (player.powerup === 'none') {
         ui.powerBadge.classList.add('hidden');
         ui.btnShoot.classList.add('opacity-40', 'text-gray-500');
-        ui.btnShoot.classList.remove('text-cyan-300', 'text-emerald-300');
+        ui.btnShoot.classList.remove('text-cyan-300', 'text-emerald-300', 'text-orange-300');
     } else if (player.powerup === 'lightning') {
         ui.powerBadge.classList.remove('hidden');
         ui.powerBadge.className = "hud-pill bg-cyan-950/70 px-3 py-1 rounded-full border border-cyan-500/50 text-cyan-300 font-bold flex items-center gap-1 animate-pulse";
@@ -75,7 +85,7 @@ function updatePowerBadge() {
         ui.powerText.textContent = 'M. Estelar';
         ui.powerTimerText.classList.add('hidden');
         ui.btnShoot.classList.remove('opacity-40', 'text-gray-500');
-        ui.btnShoot.classList.remove('text-emerald-300');
+        ui.btnShoot.classList.remove('text-emerald-300', 'text-orange-300');
         ui.btnShoot.classList.add('text-cyan-300');
     } else if (player.powerup === 'strength') {
         ui.powerBadge.classList.remove('hidden');
@@ -85,7 +95,7 @@ function updatePowerBadge() {
         ui.powerTimerText.classList.remove('hidden');
         ui.powerTimerText.textContent = `${Math.ceil(player.powerTimer / 60)}s`;
         ui.btnShoot.classList.add('opacity-40', 'text-gray-500');
-        ui.btnShoot.classList.remove('text-cyan-300', 'text-emerald-300');
+        ui.btnShoot.classList.remove('text-cyan-300', 'text-emerald-300', 'text-orange-300');
     }
 }
 

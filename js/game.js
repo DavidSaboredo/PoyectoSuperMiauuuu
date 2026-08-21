@@ -25,13 +25,13 @@ function updateSuperMiauLoadStatus() {
     if (!status) return;
 
     if (superMiauFailedSprites > 0) {
-        status.textContent = `V23 DETENIDA: ${superMiauFailedSprites} pose(s) sin cargar`;
+        status.textContent = `Carga detenida: ${superMiauFailedSprites} pose(s) sin cargar`;
         status.classList.add('error');
         return;
     }
 
     status.textContent = superMiauLoadedSprites === SUPER_MIAU_TOTAL_SPRITES
-        ? `✓ V23 lista · mundos 1, 2 y 3 · ${SUPER_MIAU_TOTAL_SPRITES}/8 poses`
+        ? `✓ Todo listo · mundos 1, 2 y 3 · ${SUPER_MIAU_TOTAL_SPRITES}/8 poses`
         : `Cargando poses ${superMiauLoadedSprites}/${SUPER_MIAU_TOTAL_SPRITES}…`;
     if (superMiauLoadedSprites === SUPER_MIAU_TOTAL_SPRITES) status.classList.add('ready');
 }
@@ -52,12 +52,48 @@ Object.entries(SUPER_MIAU_SPRITE_DATA).forEach(([state, data]) => {
 });
 updateSuperMiauLoadStatus();
 
+const MANTA_RAY_SPRITE = new Image();
+MANTA_RAY_SPRITE.decoding = 'async';
+MANTA_RAY_SPRITE.src = 'assets/sprites/mantarraya-patineta.png';
+
+const OCTOPUS_BOSS_SPRITE = new Image();
+OCTOPUS_BOSS_SPRITE.decoding = 'async';
+OCTOPUS_BOSS_SPRITE.src = 'assets/sprites/pulpo-guardian-tinta.png';
+
+const DOGCATCHER_SPRITE = new Image();
+DOGCATCHER_SPRITE.decoding = 'async';
+DOGCATCHER_SPRITE.src = 'assets/sprites/cazador.png';
+
+const ZOMBIE_SPRITE = new Image();
+ZOMBIE_SPRITE.decoding = 'async';
+ZOMBIE_SPRITE.src = 'assets/sprites/zombie.png';
+
+const VAMPIRE_SPRITE = new Image();
+VAMPIRE_SPRITE.decoding = 'async';
+VAMPIRE_SPRITE.src = 'assets/sprites/vampiro.png';
+
+const SPIDER_SPRITE = new Image();
+SPIDER_SPRITE.decoding = 'async';
+SPIDER_SPRITE.src = 'assets/sprites/arania.png';
+
+const MOLE_SPRITE = new Image();
+MOLE_SPRITE.decoding = 'async';
+MOLE_SPRITE.src = 'assets/sprites/topo.png';
+
+const CAVE_SPRITE = new Image();
+CAVE_SPRITE.decoding = 'async';
+CAVE_SPRITE.src = 'assets/sprites/cueva.png';
+
 // -----------------------------------------------------------------
 // CINEMÁTICA INICIAL: "LA NOCHE DEL PORTAL"
 // -----------------------------------------------------------------
 const cutsceneScreen = document.getElementById('cutsceneScreen');
-const cutsceneCanvas = document.getElementById('cutsceneCanvas');
-const cutsceneCtx = cutsceneCanvas.getContext('2d');
+const cutsceneVideo = document.getElementById('cutsceneVideo');
+const CUTSCENE_VIDEO_SOURCES = [
+    'cinematicas/cinematica1.mp4',
+    'cinematicas/cinematica2.mp4',
+    'cinematicas/cinematica3.mp4'
+];
 const ui = {
     startScreen: document.getElementById('startScreen'),
     shopScreen: document.getElementById('shopScreen'),
@@ -73,9 +109,6 @@ const ui = {
     creditsHint: document.getElementById('creditsHint'),
     creditsThanks: document.getElementById('creditsThanks'),
     cutsceneProgress: document.getElementById('cutsceneProgress'),
-    cutsceneCaption: document.getElementById('cutsceneCaption'),
-    cutsceneSpeaker: document.getElementById('cutsceneSpeaker'),
-    cutsceneText: document.getElementById('cutsceneText'),
     oxygenBadge: document.getElementById('oxygenBadge'),
     oxygenBar: document.getElementById('oxygenBar'),
     timerBadge: document.getElementById('timerBadge'),
@@ -114,6 +147,10 @@ const ui = {
     overlayMessage: document.getElementById('overlayMessage'),
     overlayButton: document.getElementById('overlayButton'),
     overlayMenuButton: document.getElementById('overlayMenuButton'),
+    dragonPuzzleOverlay: document.getElementById('dragonPuzzleOverlay'),
+    dragonPuzzleQuestion: document.getElementById('dragonPuzzleQuestion'),
+    dragonPuzzleAnswer: document.getElementById('dragonPuzzleAnswer'),
+    dragonPuzzleFeedback: document.getElementById('dragonPuzzleFeedback'),
     debugHud: document.getElementById('debugHud'),
     debugFps: document.getElementById('debugFps'),
     debugFrame: document.getElementById('debugFrame'),
@@ -221,6 +258,7 @@ function toggleDeveloperPanel(forceVisible) {
     developerPanelVisible = typeof forceVisible === 'boolean' ? forceVisible : !developerPanelVisible;
     if (developerPanelVisible) {
         ui.developerPanel.classList.remove('hidden');
+        requestAnimationFrame(() => ui.devLevelSelect.focus());
     } else {
         ui.developerPanel.classList.add('hidden');
     }
@@ -278,115 +316,20 @@ function getDecorationApproxWidth(deco) {
     }
 }
 
-const CUTSCENE_DURATION = 23800;
-const CUTSCENE_SCENES = [
-    {
-        start: 0, end: 3400, speaker: 'NARRADOR', cue: 'family',
-        text: 'En el Parque Sureño, Miau vivía con mamá, papá y su hermanita en una pequeña caja de cartón.'
-    },
-    {
-        start: 3400, end: 6800, speaker: 'NARRADOR', cue: 'thunder',
-        text: 'Una noche, la tormenta cubrió la ciudad. Un rayo cayó sobre el viejo árbol...'
-    },
-    {
-        start: 6800, end: 10100, speaker: 'NARRADOR', cue: 'portal',
-        text: 'El impacto abrió un portal azul y violeta. De otra dimensión apareció Firulais.'
-    },
-    {
-        start: 10100, end: 13700, speaker: 'NARRADOR', cue: 'villain',
-        text: 'El bulldog atrapó a la pequeña gatita y comenzó a llevársela hacia el portal.'
-    },
-    {
-        start: 13700, end: 17400, speaker: 'NARRADOR', cue: 'pull',
-        text: 'Mamá y papá intentaron rescatarla, pero Firulais también los arrastró a su dimensión.'
-    },
-    {
-        start: 17400, end: 21300, speaker: 'MIAU', cue: 'hero',
-        text: '¡No los abandonaré! ¡Voy a salvarlos!'
-    },
-    {
-        start: 21300, end: CUTSCENE_DURATION, speaker: 'TU MISIÓN', cue: 'mission',
-        text: 'Seguí las huellas de luz, cruzá las siete dimensiones y rescatá a la familia gatuna.'
-    }
-];
 let cutsceneActive = false;
-let cutsceneStartTime = null;
-let cutsceneAnimationFrameId = null;
-let cutsceneSceneIndex = -1;
+let cutsceneVideoIndex = 0;
+let cutscenePausedByVisibility = false;
 
-// Limita un valor a un rango para que las animaciones no se salgan de sus extremos.
+// Mantiene los porcentajes de avance y los fundidos dentro de un rango seguro.
 function cutsceneClamp(value, min = 0, max = 1) {
     return Math.max(min, Math.min(max, value));
 }
-
-// Suaviza transiciones entre dos puntos de la cinematica.
-function cutsceneSmooth(start, end, value) {
-    const t = cutsceneClamp((value - start) / (end - start));
-    return t * t * (3 - 2 * t);
-}
-
-// Mezcla dos numeros para mover elementos de la historia de forma gradual.
-function cutsceneMix(start, end, amount) {
-    return start + (end - start) * amount;
-}
-
-// Lanza peque?os sonidos narrativos que acompa?an los cambios de escena de la cinematica.
-function playCinematicCue(type) {
-    if (!ensureAudioContext()) return;
-    try {
-        if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
-        const now = audioCtx.currentTime;
-
-        function tone(frequency, endFrequency, duration, volume, wave = 'sine', delay = 0) {
-            const oscillator = audioCtx.createOscillator();
-            const cueGain = audioCtx.createGain();
-            const begins = now + delay;
-            oscillator.type = wave;
-            oscillator.frequency.setValueAtTime(frequency, begins);
-            oscillator.frequency.exponentialRampToValueAtTime(Math.max(20, endFrequency), begins + duration);
-            cueGain.gain.setValueAtTime(0.0001, begins);
-            cueGain.gain.exponentialRampToValueAtTime(volume, begins + 0.025);
-            cueGain.gain.exponentialRampToValueAtTime(0.0001, begins + duration);
-            oscillator.connect(cueGain);
-            cueGain.connect(audioCtx.destination);
-            oscillator.start(begins);
-            oscillator.stop(begins + duration + 0.03);
-        }
-
-        if (type === 'family') {
-            tone(330, 440, 0.32, 0.055, 'sine', 0);
-            tone(440, 523, 0.34, 0.05, 'sine', 0.24);
-        } else if (type === 'thunder') {
-            tone(95, 32, 0.95, 0.16, 'sawtooth', 1.65);
-            tone(58, 28, 1.25, 0.09, 'triangle', 1.78);
-        } else if (type === 'portal') {
-            [196, 293.66, 440, 659.25].forEach((frequency, index) => {
-                tone(frequency, frequency * 1.45, 0.75, 0.045, 'sine', index * 0.1);
-            });
-        } else if (type === 'villain') {
-            tone(115, 72, 0.5, 0.11, 'square', 0);
-            tone(88, 55, 0.55, 0.08, 'sawtooth', 0.2);
-        } else if (type === 'pull') {
-            tone(360, 135, 0.9, 0.07, 'triangle', 0);
-        } else if (type === 'hero') {
-            [392, 523.25, 659.25].forEach((frequency, index) => {
-                tone(frequency, frequency, 0.3, 0.055, 'sine', index * 0.16);
-            });
-        } else if (type === 'mission') {
-            [261.63, 329.63, 392, 523.25].forEach((frequency, index) => {
-                tone(frequency, frequency * 1.03, 0.38, 0.05, 'triangle', index * 0.12);
-            });
-        }
-    } catch (error) {
-        console.warn('No se pudo reproducir un sonido de la cinemática.', error);
-    }
-}
-
 // Muestra u oculta la pantalla de cinematica sin depender de estilos externos.
 function setCutsceneVisible(visible) {
     cutsceneScreen.classList.toggle('cutscene-active', visible);
     cutsceneScreen.classList.toggle('hidden', !visible);
     cutsceneScreen.setAttribute('aria-hidden', visible ? 'false' : 'true');
+    if (!visible) cutsceneVideo.pause();
     syncShellChrome();
 }
 
@@ -538,7 +481,7 @@ async function toggleFullscreen() {
 }
 
 function showHelpOverlay() {
-    const isWater = currentLevel === 5;
+    const isWater = currentLevel === 4;
     const isIOS = isIOSBrowser();
     const lines = [
         'Moverse: ⬅️➡️ o A/D',
@@ -556,529 +499,51 @@ function showHelpOverlay() {
     }, true);
 }
 
-// Cambia el texto narrativo visible para que coincida con la escena que se esta reproduciendo.
-function updateCutsceneCaption(sceneIndex) {
-    if (sceneIndex === cutsceneSceneIndex) return;
-    cutsceneSceneIndex = sceneIndex;
-    const scene = CUTSCENE_SCENES[sceneIndex];
-    ui.cutsceneSpeaker.textContent = scene.speaker;
-    ui.cutsceneSpeaker.className = scene.speaker === 'MIAU'
-        ? 'text-[9px] md:text-[11px] font-extrabold tracking-[0.2em] text-orange-300 mb-1'
-        : scene.speaker === 'TU MISIÓN'
-            ? 'text-[9px] md:text-[11px] font-extrabold tracking-[0.2em] text-cyan-300 mb-1'
-            : 'text-[9px] md:text-[11px] font-extrabold tracking-[0.2em] text-yellow-300 mb-1';
-    ui.cutsceneText.textContent = scene.text;
-    ui.cutsceneCaption.classList.remove('is-changing');
-    void ui.cutsceneCaption.offsetWidth;
-    ui.cutsceneCaption.classList.add('is-changing');
-    playCinematicCue(scene.cue);
-}
-
-// Dibuja a Miau y su familia durante la cinematica usando formas simples en canvas.
-function drawCinematicCat(target, x, groundY, scale, color, detail, facing = 1, emotion = 'calm', cape = false) {
-    target.save();
-    target.translate(x, groundY);
-    target.scale(facing * scale, scale);
-
-    target.fillStyle = 'rgba(2,6,23,.38)';
-    target.beginPath();
-    target.ellipse(0, 1, 21, 5, 0, 0, Math.PI * 2);
-    target.fill();
-
-    if (cape) {
-        const capeWave = prefersReducedMotion ? 0 : Math.sin(performance.now() * .008 + x * .02) * 4;
-        const capeGradient = target.createLinearGradient(-8, -43, -38, -5);
-        capeGradient.addColorStop(0, '#fb7185');
-        capeGradient.addColorStop(.45, '#ef4444');
-        capeGradient.addColorStop(1, '#991b1b');
-        target.fillStyle = capeGradient;
-        target.strokeStyle = '#7f1d1d';
-        target.lineWidth = 2;
-        target.beginPath();
-        target.moveTo(-10, -42);
-        target.bezierCurveTo(-30, -42 + capeWave, -42, -24 + capeWave, -34, -5 + capeWave * .35);
-        target.quadraticCurveTo(-18, -12, -6, -17);
-        target.closePath();
-        target.fill();
-        target.stroke();
-    }
-
-    target.strokeStyle = color;
-    target.lineWidth = 7;
-    target.lineCap = 'round';
-    target.beginPath();
-    target.moveTo(-17, -24);
-    target.quadraticCurveTo(-34, -38, -28, -53);
-    target.stroke();
-
-    const bodyGradient = target.createRadialGradient(7, -26, 3, 0, -23, 28);
-    bodyGradient.addColorStop(0, '#ffffff');
-    bodyGradient.addColorStop(0.18, color);
-    bodyGradient.addColorStop(1, color);
-    target.fillStyle = bodyGradient;
-    target.beginPath();
-    target.ellipse(0, -22, 23, 18, 0, 0, Math.PI * 2);
-    target.fill();
-    target.strokeStyle = 'rgba(89,39,14,.55)';
-    target.lineWidth = 2;
-    target.stroke();
-
-    target.fillStyle = 'rgba(255,247,237,.72)';
-    target.beginPath();
-    target.ellipse(7, -19, 11, 10, -.18, 0, Math.PI * 2);
-    target.fill();
-
-    target.fillStyle = color;
-    target.beginPath();
-    target.arc(13, -45, 18, 0, Math.PI * 2);
-    target.fill();
-    target.beginPath();
-    target.moveTo(1, -54); target.lineTo(5, -70); target.lineTo(13, -57); target.closePath();
-    target.moveTo(15, -58); target.lineTo(25, -70); target.lineTo(29, -52); target.closePath();
-    target.fill();
-
-    target.fillStyle = '#fda4af';
-    target.beginPath();
-    target.moveTo(5, -58); target.lineTo(6, -66); target.lineTo(11, -58); target.closePath();
-    target.moveTo(19, -59); target.lineTo(24, -66); target.lineTo(26, -56); target.closePath();
-    target.fill();
-
-    if (cape) {
-        target.fillStyle = '#7f1d1d';
-        target.beginPath(); target.ellipse(-2, -38, 12, 4, -.15, 0, Math.PI * 2); target.fill();
-        target.shadowColor = '#fde047'; target.shadowBlur = 6;
-        target.fillStyle = '#fde047';
-        target.beginPath(); target.arc(5, -39, 3, 0, Math.PI * 2); target.fill();
-        target.shadowBlur = 0;
-    }
-
-    target.strokeStyle = color;
-    target.lineWidth = 6;
-    target.beginPath();
-    target.moveTo(-12, -10); target.lineTo(-13, -1);
-    target.moveTo(8, -9); target.lineTo(9, -1);
-    target.stroke();
-
-    const eyeY = emotion === 'afraid' ? -47 : -46;
-    target.fillStyle = emotion === 'afraid' ? '#ffffff' : '#1e1b4b';
-    target.beginPath();
-    target.ellipse(8, eyeY, emotion === 'afraid' ? 4.2 : 3.2, emotion === 'afraid' ? 5.2 : 3.8, 0, 0, Math.PI * 2);
-    target.ellipse(19, eyeY, emotion === 'afraid' ? 4.2 : 3.2, emotion === 'afraid' ? 5.2 : 3.8, 0, 0, Math.PI * 2);
-    target.fill();
-    if (emotion === 'afraid') {
-        target.fillStyle = '#1e1b4b';
-        target.beginPath();
-        target.arc(8.5, eyeY + 1, 2.1, 0, Math.PI * 2);
-        target.arc(19.5, eyeY + 1, 2.1, 0, Math.PI * 2);
-        target.fill();
-    }
-
-    target.fillStyle = '#f43f5e';
-    target.beginPath();
-    target.moveTo(13.5, -41); target.lineTo(11, -38); target.lineTo(16, -38); target.closePath();
-    target.fill();
-
-    target.fillStyle = 'rgba(255,247,237,.85)';
-    target.beginPath();
-    target.ellipse(10.5, -36.5, 5.5, 3.7, 0, 0, Math.PI * 2);
-    target.ellipse(16.5, -36.5, 5.5, 3.7, 0, 0, Math.PI * 2);
-    target.fill();
-    target.fillStyle = '#f43f5e';
-    target.beginPath();
-    target.moveTo(13.5, -41); target.lineTo(11, -38); target.lineTo(16, -38); target.closePath();
-    target.fill();
-
-    if (detail === 'bow') {
-        target.fillStyle = '#f43f5e';
-        target.beginPath();
-        target.ellipse(5, -61, 6, 4, -0.4, 0, Math.PI * 2);
-        target.ellipse(13, -64, 6, 4, 0.4, 0, Math.PI * 2);
-        target.arc(9, -62, 2.8, 0, Math.PI * 2);
-        target.fill();
-    } else if (detail === 'moustache') {
-        target.strokeStyle = '#0f172a';
-        target.lineWidth = 1.5;
-        target.beginPath();
-        target.moveTo(10, -35); target.quadraticCurveTo(5, -31, 1, -35);
-        target.moveTo(17, -35); target.quadraticCurveTo(22, -31, 27, -35);
-        target.stroke();
-    }
-
-    target.restore();
-}
-
-// Dibuja a Firulais para la introduccion de la historia.
-function drawCinematicBulldog(target, x, groundY, scale, phase) {
-    target.save();
-    target.translate(x, groundY);
-    target.scale(scale, scale);
-    target.fillStyle = 'rgba(0,0,0,.52)';
-    target.beginPath();
-    target.ellipse(0, 2, 43, 8, 0, 0, Math.PI * 2);
-    target.fill();
-
-    const bodyGradient = target.createRadialGradient(8, -50, 5, 0, -42, 58);
-    bodyGradient.addColorStop(0, '#29222f');
-    bodyGradient.addColorStop(0.55, '#0b0811');
-    bodyGradient.addColorStop(1, '#020205');
-    target.fillStyle = bodyGradient;
-    target.beginPath();
-    target.ellipse(0, -39, 42, 39, 0, 0, Math.PI * 2);
-    target.fill();
-
-    target.fillStyle = '#ef4444';
-    target.fillRect(-38, -58, 76, 9);
-    for (let spikeX = -30; spikeX <= 30; spikeX += 20) {
-        target.fillStyle = '#f8fafc';
-        target.beginPath();
-        target.moveTo(spikeX - 4, -58); target.lineTo(spikeX, -67); target.lineTo(spikeX + 4, -58); target.closePath();
-        target.fill();
-    }
-
-    target.fillStyle = '#07050b';
-    target.beginPath();
-    target.ellipse(0, -78, 39, 31, 0, 0, Math.PI * 2);
-    target.fill();
-    target.beginPath();
-    target.moveTo(-30, -94); target.lineTo(-46, -101); target.lineTo(-35, -72); target.closePath();
-    target.moveTo(30, -94); target.lineTo(46, -101); target.lineTo(35, -72); target.closePath();
-    target.fill();
-
-    target.fillStyle = '#30252e';
-    target.beginPath();
-    target.ellipse(0, -66, 23, 15, 0, 0, Math.PI * 2);
-    target.fill();
-    target.fillStyle = '#020205';
-    target.beginPath();
-    target.ellipse(0, -72, 8, 5, 0, 0, Math.PI * 2);
-    target.fill();
-
-    target.shadowColor = '#ef4444';
-    target.shadowBlur = 13 + Math.sin(phase * 0.008) * 4;
-    target.fillStyle = '#ef4444';
-    target.beginPath();
-    target.ellipse(-15, -83, 5, 4, -0.2, 0, Math.PI * 2);
-    target.ellipse(15, -83, 5, 4, 0.2, 0, Math.PI * 2);
-    target.fill();
-    target.shadowBlur = 0;
-
-    target.fillStyle = '#ffffff';
-    target.beginPath();
-    target.moveTo(-13, -60); target.lineTo(-8, -50); target.lineTo(-3, -59); target.closePath();
-    target.moveTo(13, -60); target.lineTo(8, -50); target.lineTo(3, -59); target.closePath();
-    target.fill();
-
-    const step = Math.sin(phase * 0.011) * 3;
-    target.fillStyle = '#0b0811';
-    target.fillRect(-31, -22, 17, 23 + step);
-    target.fillRect(14, -22, 17, 23 - step);
-    target.restore();
-}
-
-// Crea el portal dimensional animado que conecta la historia con el juego.
-function drawCinematicPortal(target, x, y, radius, elapsed) {
-    if (radius <= 1) return;
-    target.save();
-    target.translate(x, y);
-    target.globalCompositeOperation = 'lighter';
-    for (let ring = 0; ring < 7; ring++) {
-        const ringRadius = radius * (1 - ring * 0.075) + Math.sin(elapsed * 0.006 + ring) * 5;
-        target.strokeStyle = ring % 2 === 0 ? 'rgba(34,211,238,.72)' : 'rgba(168,85,247,.66)';
-        target.lineWidth = 7 - ring * 0.65;
-        target.beginPath();
-        target.ellipse(0, 0, ringRadius * 0.58, ringRadius, elapsed * 0.00035 + ring * 0.11, 0, Math.PI * 2);
-        target.stroke();
-    }
-    const glow = target.createRadialGradient(0, 0, 4, 0, 0, radius);
-    glow.addColorStop(0, 'rgba(255,255,255,.7)');
-    glow.addColorStop(0.22, 'rgba(34,211,238,.35)');
-    glow.addColorStop(0.62, 'rgba(126,34,206,.23)');
-    glow.addColorStop(1, 'rgba(15,23,42,0)');
-    target.fillStyle = glow;
-    target.beginPath();
-    target.ellipse(0, 0, radius * 0.7, radius * 1.08, 0, 0, Math.PI * 2);
-    target.fill();
-    target.restore();
-}
-
-// Pinta el parque y todos los elementos visuales que aparecen en la apertura.
-function drawCinematicPark(elapsed) {
-    const target = cutsceneCtx;
-    const storm = cutsceneSmooth(2600, 6000, elapsed);
-    const lightningPulse = Math.exp(-Math.pow((elapsed - 5400) / 330, 2));
-    const shake = lightningPulse > 0.12 ? Math.sin(elapsed * 0.09) * 4 * lightningPulse : 0;
-    target.setTransform(1, 0, 0, 1, 0, 0);
-    target.clearRect(0, 0, 800, 450);
-    target.save();
-    target.translate(shake, shake * 0.35);
-
-    const sky = target.createLinearGradient(0, 0, 0, 360);
-    sky.addColorStop(0, `rgb(${Math.round(cutsceneMix(13, 3, storm))}, ${Math.round(cutsceneMix(20, 8, storm))}, ${Math.round(cutsceneMix(48, 28, storm))})`);
-    sky.addColorStop(1, `rgb(${Math.round(cutsceneMix(31, 10, storm))}, ${Math.round(cutsceneMix(41, 17, storm))}, ${Math.round(cutsceneMix(76, 43, storm))})`);
-    target.fillStyle = sky;
-    target.fillRect(0, 0, 800, 450);
-
-    // Luna y ciudad detrás del Parque Sureño.
-    target.globalAlpha = 1 - storm * 0.72;
-    target.fillStyle = '#fef3c7';
-    target.beginPath();
-    target.arc(108, 80, 34, 0, Math.PI * 2);
-    target.fill();
-    target.globalAlpha = 1;
-    const buildings = [
-        [0, 215, 74, 143], [72, 190, 74, 168], [144, 235, 86, 123], [225, 175, 86, 183],
-        [310, 223, 78, 135], [387, 155, 95, 203], [480, 207, 72, 151], [550, 178, 84, 180],
-        [632, 220, 76, 138], [706, 165, 94, 193]
-    ];
-    buildings.forEach(([x, y, width, height], index) => {
-        target.fillStyle = index % 2 ? '#10162d' : '#0b1226';
-        target.fillRect(x, y, width, height);
-        for (let wx = x + 13; wx < x + width - 8; wx += 21) {
-            for (let wy = y + 16; wy < 335; wy += 24) {
-                target.fillStyle = ((wx + wy + index) % 4 === 0) ? 'rgba(253,224,71,.68)' : 'rgba(96,165,250,.18)';
-                target.fillRect(wx, wy, 6, 8);
-            }
-        }
-    });
-
-    // Nubes de tormenta.
-    target.fillStyle = `rgba(30, 31, 53, ${0.4 + storm * 0.55})`;
-    for (let cloud = 0; cloud < 5; cloud++) {
-        const cloudX = ((cloud * 190 - elapsed * 0.012) % 1040) - 80;
-        const cloudY = 42 + (cloud % 2) * 35;
-        target.beginPath();
-        target.arc(cloudX, cloudY, 43, 0, Math.PI * 2);
-        target.arc(cloudX + 43, cloudY - 9, 53, 0, Math.PI * 2);
-        target.arc(cloudX + 91, cloudY + 4, 41, 0, Math.PI * 2);
-        target.fill();
-    }
-
-    // Suelo, sendero y césped del parque.
-    target.fillStyle = '#14261f';
-    target.fillRect(0, 350, 800, 100);
-    target.fillStyle = '#2d4f38';
-    target.fillRect(0, 350, 800, 7);
-    target.fillStyle = '#334155';
-    target.beginPath();
-    target.moveTo(270, 450); target.lineTo(365, 350); target.lineTo(520, 350); target.lineTo(660, 450); target.closePath();
-    target.fill();
-
-    // Faroles y banco.
-    [292, 744].forEach((lampX, index) => {
-        target.strokeStyle = '#475569';
-        target.lineWidth = 6;
-        target.beginPath(); target.moveTo(lampX, 350); target.lineTo(lampX, 238); target.stroke();
-        target.fillStyle = storm > 0.8 && index === 1 && Math.floor(elapsed / 180) % 3 === 0 ? '#64748b' : '#fde68a';
-        target.shadowColor = '#fde68a'; target.shadowBlur = 18 * (1 - storm * 0.25);
-        target.beginPath(); target.arc(lampX, 236, 11, 0, Math.PI * 2); target.fill();
-        target.shadowBlur = 0;
-    });
-    target.fillStyle = '#7c4a2d';
-    target.fillRect(365, 304, 112, 12);
-    target.fillRect(372, 321, 98, 9);
-    target.fillStyle = '#475569';
-    target.fillRect(379, 330, 7, 21);
-    target.fillRect(455, 330, 7, 21);
-
-    // Caja-refugio de la familia.
-    target.fillStyle = '#a16207';
-    target.fillRect(55, 286, 162, 68);
-    target.fillStyle = '#ca8a04';
-    target.beginPath();
-    target.moveTo(55, 286); target.lineTo(88, 265); target.lineTo(139, 286); target.lineTo(181, 263); target.lineTo(217, 286); target.closePath();
-    target.fill();
-    target.fillStyle = '#422006';
-    target.fillRect(105, 306, 63, 48);
-    target.strokeStyle = 'rgba(254,240,138,.45)';
-    target.lineWidth = 2;
-    target.strokeRect(61, 292, 150, 57);
-    target.fillStyle = '#fef08a';
-    target.font = 'bold 12px Fredoka';
-    target.fillText('HOGAR', 68, 310);
-
-    // Árbol viejo alcanzado por el rayo.
-    target.strokeStyle = '#4b2e24';
-    target.lineWidth = 29;
-    target.lineCap = 'round';
-    target.beginPath(); target.moveTo(650, 350); target.lineTo(647, 190); target.stroke();
-    target.lineWidth = 16;
-    target.beginPath();
-    target.moveTo(646, 238); target.lineTo(590, 182);
-    target.moveTo(650, 235); target.lineTo(708, 169);
-    target.stroke();
-    target.fillStyle = `rgb(${Math.round(cutsceneMix(38, 26, storm))}, ${Math.round(cutsceneMix(86, 45, storm))}, ${Math.round(cutsceneMix(61, 52, storm))})`;
-    [[600,162,53],[649,143,62],[700,158,50],[618,204,45],[688,207,43]].forEach(([x,y,radius]) => {
-        target.beginPath(); target.arc(x, y, radius, 0, Math.PI * 2); target.fill();
-    });
-
-    // El rayo aparece justo antes de que se abra el portal.
-    if (elapsed > 4900 && elapsed < 6050) {
-        target.strokeStyle = `rgba(255,255,255,${cutsceneClamp(lightningPulse * 1.25)})`;
-        target.shadowColor = '#67e8f9';
-        target.shadowBlur = 22;
-        target.lineWidth = 8;
-        target.beginPath();
-        target.moveTo(612, 0); target.lineTo(653, 74); target.lineTo(624, 128); target.lineTo(661, 195); target.lineTo(647, 250);
-        target.stroke();
-        target.shadowBlur = 0;
-    }
-
-    const portalOpen = Math.min(
-        cutsceneSmooth(5900, 7600, elapsed),
-        1 - cutsceneSmooth(22000, 23700, elapsed)
-    );
-    drawCinematicPortal(target, 650, 264, 90 * portalOpen, elapsed);
-
-    // Posiciones animadas de la familia y de Firulais.
-    const sisterTravel = cutsceneSmooth(10300, 13450, elapsed);
-    const parentsTravel = cutsceneSmooth(13800, 17150, elapsed);
-    const miauTravel = cutsceneSmooth(18100, 21800, elapsed);
-    const frightened = elapsed > 6800;
-    const sisterX = cutsceneMix(226, 642, sisterTravel);
-    const sisterY = 347 - Math.sin(sisterTravel * Math.PI) * 45;
-    const fatherX = cutsceneMix(143, 626, parentsTravel);
-    const motherX = cutsceneMix(184, 635, parentsTravel);
-    const parentLift = Math.sin(parentsTravel * Math.PI) * 33;
-
-    // Cintas de energía: dejan claro que la familia no camina hacia el
-    // portal, sino que Firulais la está arrastrando a otra dimensión.
-    function drawDimensionalPull(fromX, fromY, strength, color) {
-        if (strength <= 0.01 || strength >= 0.99) return;
-        target.save();
-        target.globalCompositeOperation = 'lighter';
-        target.globalAlpha = Math.sin(strength * Math.PI) * 0.78;
-        target.strokeStyle = color;
-        target.shadowColor = color;
-        target.shadowBlur = 12;
-        target.lineWidth = 3;
-        target.setLineDash([10, 9]);
-        target.lineDashOffset = -elapsed * 0.04;
-        target.beginPath();
-        target.moveTo(fromX + 8, fromY - 37);
-        target.bezierCurveTo(fromX + 85, fromY - 78, 575, 304, 640, 265);
-        target.stroke();
-        target.setLineDash([]);
-        target.lineWidth = 2;
-        target.beginPath();
-        target.ellipse(fromX, fromY - 31, 26, 40, elapsed * 0.001, 0, Math.PI * 2);
-        target.stroke();
-        target.restore();
-    }
-
-    drawDimensionalPull(sisterX, sisterY, sisterTravel, '#67e8f9');
-    drawDimensionalPull(fatherX, 347 - parentLift, parentsTravel, '#c084fc');
-    drawDimensionalPull(motherX, 347 - parentLift * 0.85, parentsTravel, '#f9a8d4');
-
-    if (elapsed < 17450) {
-        target.globalAlpha = 1 - cutsceneSmooth(16500, 17450, elapsed);
-        drawCinematicCat(target, fatherX, 347 - parentLift, 0.82, '#94a3b8', 'moustache', 1, frightened ? 'afraid' : 'calm');
-        drawCinematicCat(target, motherX, 347 - parentLift * 0.85, 0.78, '#fef08a', 'bow', 1, frightened ? 'afraid' : 'calm');
-        target.globalAlpha = 1;
-    }
-    if (elapsed < 13800) {
-        target.globalAlpha = 1 - cutsceneSmooth(12900, 13800, elapsed);
-        drawCinematicCat(target, sisterX, sisterY, 0.58, '#ffffff', 'none', 1, frightened ? 'afraid' : 'calm');
-        target.globalAlpha = 1;
-    }
-
-    if (elapsed >= 7100 && elapsed < 17600) {
-        const enter = cutsceneSmooth(7100, 8900, elapsed);
-        const retreat = cutsceneSmooth(14500, 17200, elapsed);
-        const firulaisX = cutsceneMix(cutsceneMix(690, 522, enter), 640, retreat);
-        target.globalAlpha = 1 - cutsceneSmooth(16600, 17600, elapsed);
-        drawCinematicBulldog(target, firulaisX, 349, 0.93, elapsed);
-        target.globalAlpha = 1;
-    }
-
-    // Miau permanece escondido y luego se convierte en el héroe del rescate.
-    const miauX = cutsceneMix(270, 646, miauTravel);
-    const miauJump = Math.sin(miauTravel * Math.PI) * 82;
-    target.globalAlpha = 1 - cutsceneSmooth(21650, 22800, elapsed);
-    drawCinematicCat(target, miauX, 348 - miauJump, 0.7, '#f97316', 'none', 1, elapsed > 17200 ? 'afraid' : 'calm', elapsed > 17800);
-    target.globalAlpha = 1;
-
-    // Arbusto que oculta a Miau al inicio.
-    if (elapsed < 18100) {
-        target.fillStyle = '#166534';
-        [[246,340,25],[270,330,31],[295,342,24]].forEach(([x,y,radius]) => {
-            target.beginPath(); target.arc(x, y, radius, 0, Math.PI * 2); target.fill();
-        });
-    }
-
-    // Huellas luminosas que señalan el camino al final del prólogo.
-    if (elapsed > 20200) {
-        const pawAlpha = cutsceneSmooth(20200, 21800, elapsed);
-        target.globalAlpha = pawAlpha;
-        for (let index = 0; index < 6; index++) {
-            const pawX = 330 + index * 49;
-            const pawY = 330 - Math.sin(index * 0.9) * 19;
-            drawPawMark(target, pawX, pawY, 0.62, index % 2 ? '#67e8f9' : '#fde047');
-        }
-        target.globalAlpha = 1;
-    }
-
-    // Lluvia delante de la escena.
-    if (storm > 0.12) {
-        target.strokeStyle = `rgba(147,197,253,${0.13 + storm * 0.3})`;
-        target.lineWidth = 1.5;
-        for (let drop = 0; drop < 58; drop++) {
-            const dropX = ((drop * 137 - elapsed * 0.18) % 900 + 900) % 900 - 45;
-            const dropY = ((drop * 71 + elapsed * 0.31) % 520) - 55;
-            target.beginPath();
-            target.moveTo(dropX, dropY);
-            target.lineTo(dropX - 8, dropY + 20);
-            target.stroke();
-        }
-    }
-
-    if (lightningPulse > 0.05) {
-        target.fillStyle = `rgba(224,242,254,${lightningPulse * 0.58})`;
-        target.fillRect(-10, -10, 820, 470);
-    }
-    if (elapsed > 22400) {
-        target.fillStyle = `rgba(255,255,255,${cutsceneSmooth(22400, 23750, elapsed)})`;
-        target.fillRect(0, 0, 800, 450);
-    }
-
-    target.restore();
-}
-
-// Renderiza un fotograma completo de la cinematica con su fondo y subtitulos.
-function renderCutsceneFrame(elapsed) {
-    drawCinematicPark(elapsed);
-    const foundSceneIndex = CUTSCENE_SCENES.findIndex(scene => elapsed >= scene.start && elapsed < scene.end);
-    const sceneIndex = foundSceneIndex === -1 ? CUTSCENE_SCENES.length - 1 : foundSceneIndex;
-    updateCutsceneCaption(sceneIndex);
-    ui.cutsceneProgress.style.width = `${cutsceneClamp(elapsed / CUTSCENE_DURATION) * 100}%`;
-}
-
-// Intenta dibujar la cinematica y cae a una version mas segura si el navegador falla.
-function renderCutsceneFrameSafely(elapsed) {
-    try {
-        renderCutsceneFrame(elapsed);
-    } catch (error) {
-        // Si un navegador antiguo no admite alguna operación del
-        // canvas, el relato continúa mediante los subtítulos.
-        console.warn('La animación visual se redujo por compatibilidad.', error);
-        const foundSceneIndex = CUTSCENE_SCENES.findIndex(scene => elapsed >= scene.start && elapsed < scene.end);
-        const sceneIndex = foundSceneIndex === -1 ? CUTSCENE_SCENES.length - 1 : foundSceneIndex;
-        updateCutsceneCaption(sceneIndex);
-        ui.cutsceneProgress.style.width = `${cutsceneClamp(elapsed / CUTSCENE_DURATION) * 100}%`;
-    }
-}
-
-// Controla el avance en el tiempo de la cinematica hasta que termina o se salta.
-function cutsceneLoop(timestamp) {
-    if (!cutsceneActive) return;
-    if (cutsceneStartTime === null) cutsceneStartTime = timestamp;
-    const elapsed = Math.min(CUTSCENE_DURATION, timestamp - cutsceneStartTime);
-    renderCutsceneFrameSafely(elapsed);
-    if (elapsed >= CUTSCENE_DURATION) {
+function playCutsceneVideo(index) {
+    if (!cutsceneActive || index >= CUTSCENE_VIDEO_SOURCES.length) {
         finishCutscene();
-    } else {
-        cutsceneAnimationFrameId = requestAnimationFrame(cutsceneLoop);
+        return;
     }
+    cutsceneVideoIndex = index;
+    ui.cutsceneProgress.style.width = `${index / CUTSCENE_VIDEO_SOURCES.length * 100}%`;
+    cutsceneVideo.classList.add('is-fading');
+    cutsceneVideo.volume = 1;
+    cutsceneVideo.src = CUTSCENE_VIDEO_SOURCES[index];
+    cutsceneVideo.load();
+    cutsceneVideo.play().catch(error => {
+        console.warn('El navegador no pudo iniciar la cinemática automáticamente.', error);
+    });
 }
+
+cutsceneVideo.addEventListener('loadeddata', () => {
+    if (!cutsceneActive) return;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        cutsceneVideo.classList.remove('is-fading');
+    }));
+});
+
+cutsceneVideo.addEventListener('timeupdate', () => {
+    if (!cutsceneActive || !Number.isFinite(cutsceneVideo.duration) || cutsceneVideo.duration <= 0) return;
+    const videoProgress = cutsceneVideo.currentTime / cutsceneVideo.duration;
+    const totalProgress = (cutsceneVideoIndex + videoProgress) / CUTSCENE_VIDEO_SOURCES.length;
+    ui.cutsceneProgress.style.width = `${cutsceneClamp(totalProgress) * 100}%`;
+    const remaining = cutsceneVideo.duration - cutsceneVideo.currentTime;
+    if (remaining <= .7) {
+        cutsceneVideo.classList.add('is-fading');
+        cutsceneVideo.volume = cutsceneClamp(remaining / .7);
+    }
+});
+
+cutsceneVideo.addEventListener('ended', () => {
+    if (!cutsceneActive) return;
+    playCutsceneVideo(cutsceneVideoIndex + 1);
+});
+
+cutsceneVideo.addEventListener('error', () => {
+    if (!cutsceneActive) return;
+    console.warn(`No se pudo reproducir ${CUTSCENE_VIDEO_SOURCES[cutsceneVideoIndex]}.`);
+    playCutsceneVideo(cutsceneVideoIndex + 1);
+});
 
 // Inicia la aventura ocultando menus, activando la cinematica y preparando audio y animacion.
 function beginAdventure() {
@@ -1094,19 +559,20 @@ function beginAdventure() {
     ui.gameOverlay.classList.add('hidden');
     setCutsceneVisible(true);
     cutsceneActive = true;
-    cutsceneSceneIndex = -1;
-    cutsceneStartTime = null;
-    renderCutsceneFrameSafely(0);
-    cutsceneAnimationFrameId = requestAnimationFrame(cutsceneLoop);
+    playCutsceneVideo(0);
 }
 
 // Cierra la cinematica y da paso a la jugabilidad real.
 function finishCutscene() {
     if (!cutsceneActive) return;
     cutsceneActive = false;
-    if (cutsceneAnimationFrameId) cancelAnimationFrame(cutsceneAnimationFrameId);
-    cutsceneAnimationFrameId = null;
-    cutsceneStartTime = null;
+    cutscenePausedByVisibility = false;
+    cutsceneVideo.pause();
+    cutsceneVideo.classList.add('is-fading');
+    cutsceneVideo.volume = 1;
+    cutsceneVideo.removeAttribute('src');
+    cutsceneVideo.load();
+    ui.cutsceneProgress.style.width = '0%';
     setCutsceneVisible(false);
     startGame();
 }
@@ -1126,6 +592,9 @@ let currentLevel = 1;
 let levelOneSection = 1;
 let levelTwoSection = 1;
 let levelThreeSection = 1;
+let levelFourSection = 1;
+let levelFiveSection = 1;
+let levelSixSection = 1;
 let gameActive = false;
 let isPaused = false;
 let gameOver = false;
@@ -1149,8 +618,8 @@ const LEVEL_IDENTITIES = {
     1: { name: 'Parque Sureño', subtitle: 'La noche del portal', icon: '⛈️', accent: '#38bdf8' },
     2: { name: 'Bosque de los Ecos', subtitle: 'Las voces entre las raíces', icon: '🌙', accent: '#c084fc' },
     3: { name: 'Colonia Colosal', subtitle: 'El jardín visto por un gato', icon: '🍃', accent: '#4ade80' },
-    4: { name: 'Cordillera de las Siete Huellas', subtitle: 'Un camino escrito en fuego', icon: '🌋', accent: '#fb923c' },
-    5: { name: 'Ciudad Sumergida de Bigotes', subtitle: 'Recuerdos bajo el río', icon: '🫧', accent: '#22d3ee' },
+    4: { name: 'Ciudad Sumergida de Bigotes', subtitle: 'Recuerdos bajo el río', icon: '🫧', accent: '#22d3ee' },
+    5: { name: 'Cordillera de las Siete Huellas', subtitle: 'Un camino escrito en fuego', icon: '🌋', accent: '#fb923c' },
     6: { name: 'Fortaleza de Firulais', subtitle: 'La jaula de las sombras', icon: '🏰', accent: '#f87171' },
     7: { name: 'Dimensión Quebrada', subtitle: 'Todas las huellas llevan a casa', icon: '🌀', accent: '#34d399' }
 };
@@ -1173,10 +642,30 @@ const LEVEL_THREE_IDENTITIES = {
     3: { name: 'Puentes de la Copa Verde', subtitle: 'Lianas, combate y tablas que no aguantan para siempre', icon: '🌿', accent: '#4ade80' }
 };
 
+const LEVEL_FOUR_IDENTITIES = {
+    1: { name: 'Ciudad Sumergida de Bigotes', subtitle: 'Recuerdos bajo el río', icon: '🫧', accent: '#22d3ee' },
+    2: { name: 'Remolinos de Bigotes', subtitle: 'Corrientes antiguas custodian la salida', icon: '🌀', accent: '#67e8f9' },
+    3: { name: 'Guarida del Pulpo', subtitle: 'Tinta negra sobre las últimas huellas', icon: '🐙', accent: '#f472b6' }
+};
+
+const LEVEL_FIVE_IDENTITIES = {
+    1: { name: 'Cordillera de las Siete Huellas', subtitle: 'Un camino escrito en fuego', icon: '🌋', accent: '#fb923c' },
+    2: { name: 'Lluvia del Volcán', subtitle: 'Las piedras caen y el cielo también arde', icon: '☄️', accent: '#facc15' },
+    3: { name: 'Rescate del Dragón', subtitle: 'Firulais escondió la llave entre los lucky blocks', icon: '🐉', accent: '#ef4444' }
+};
+
+const LEVEL_SIX_IDENTITIES = {
+    1: { name: 'Asalto a la Fortaleza', subtitle: 'Super Miau y el dragón contra la guardia de Firulais', icon: '🐉', accent: '#f87171' },
+    2: { name: 'Duelo Final', subtitle: 'Super Miau contra Firulais', icon: '🐾', accent: '#ef4444' }
+};
+
 function getCurrentLevelLabel() {
     if (currentLevel === 1) return `1.${levelOneSection}`;
     if (currentLevel === 2) return `2.${levelTwoSection}`;
     if (currentLevel === 3) return `3.${levelThreeSection}`;
+    if (currentLevel === 4) return `4.${levelFourSection}`;
+    if (currentLevel === 5) return `5.${levelFiveSection}`;
+    if (currentLevel === 6) return `6.${levelSixSection}`;
     return `${currentLevel}`;
 }
 
@@ -1184,6 +673,9 @@ function getCurrentIdentity() {
     if (currentLevel === 1) return LEVEL_ONE_IDENTITIES[levelOneSection];
     if (currentLevel === 2) return LEVEL_TWO_IDENTITIES[levelTwoSection];
     if (currentLevel === 3) return LEVEL_THREE_IDENTITIES[levelThreeSection];
+    if (currentLevel === 4) return LEVEL_FOUR_IDENTITIES[levelFourSection];
+    if (currentLevel === 5) return LEVEL_FIVE_IDENTITIES[levelFiveSection];
+    if (currentLevel === 6) return LEVEL_SIX_IDENTITIES[levelSixSection];
     return LEVEL_IDENTITIES[currentLevel];
 }
 
@@ -1192,6 +684,9 @@ function getCurrentBlueprint() {
     if (currentLevel === 1) return LEVEL_ONE_BLUEPRINTS[levelOneSection];
     if (currentLevel === 2) return LEVEL_TWO_BLUEPRINTS[levelTwoSection];
     if (currentLevel === 3) return LEVEL_THREE_BLUEPRINTS[levelThreeSection];
+    if (currentLevel === 4) return LEVEL_FOUR_BLUEPRINTS[levelFourSection];
+    if (currentLevel === 5) return LEVEL_FIVE_BLUEPRINTS[levelFiveSection];
+    if (currentLevel === 6) return LEVEL_SIX_BLUEPRINTS[levelSixSection];
     return MAP_BLUEPRINTS[currentLevel];
 }
 
@@ -1281,8 +776,26 @@ function populateDeveloperLevelOptions() {
         option.textContent = `${identity.icon} Nivel 3.${section} · ${identity.name}`;
         ui.devLevelSelect.appendChild(option);
     });
+    Object.entries(LEVEL_FOUR_IDENTITIES).forEach(([section, identity]) => {
+        const option = document.createElement('option');
+        option.value = `4.${section}`;
+        option.textContent = `${identity.icon} Nivel 4.${section} · ${identity.name}`;
+        ui.devLevelSelect.appendChild(option);
+    });
+    Object.entries(LEVEL_FIVE_IDENTITIES).forEach(([section, identity]) => {
+        const option = document.createElement('option');
+        option.value = `5.${section}`;
+        option.textContent = `${identity.icon} Nivel 5.${section} · ${identity.name}`;
+        ui.devLevelSelect.appendChild(option);
+    });
+    Object.entries(LEVEL_SIX_IDENTITIES).forEach(([section, identity]) => {
+        const option = document.createElement('option');
+        option.value = `6.${section}`;
+        option.textContent = `${identity.icon} Nivel 6.${section} · ${identity.name}`;
+        ui.devLevelSelect.appendChild(option);
+    });
     Object.entries(LEVEL_IDENTITIES).forEach(([level, identity]) => {
-        if (level === '1' || level === '2' || level === '3') return;
+        if (level === '1' || level === '2' || level === '3' || level === '4' || level === '5' || level === '6') return;
         const option = document.createElement('option');
         option.value = level;
         option.textContent = `${identity.icon} Nivel ${level} · ${identity.name}`;
@@ -1306,11 +819,11 @@ function grantInterLevelReward(completedLevel) {
 // Variable para el temporizador de tiempo (Nivel 7)
 let levelTimer = 0;
 const DEFAULT_CREDITS = [
-    { role: 'Idea, direccion y produccion', names: ['Tu nombre va aqui'], detail: 'La chispa que convirtió una caja de cartón y un parque en una aventura dimensional.' },
-    { role: 'Programacion y diseño del juego', names: ['Equipo Super Miau'], detail: 'Mecánicas, niveles, sonido, optimización y toda la lógica que hace correr a Miau.' },
-    { role: 'Arte, historia y ajustes finales', names: ['Pendiente de nombres finales'], detail: 'Fondos, identidad de cada mundo, textos y el tono emocional del viaje.' },
-    { role: 'Pruebas y balance', names: ['Pendiente de nombres finales'], detail: 'Saltos afinados, dificultad revisada y pruebas para que la aventura se sienta justa.' },
-    { role: 'Agradecimiento especial', names: ['A todas las personas que ayudaron a Super Miau a llegar a casa'], detail: 'Este cierre queda preparado para sumar nombres definitivos cuando quieras.' }
+    { role: 'Creación colectiva', names: ['4.º grado'], detail: 'Cada niña y cada niño sumó una idea, un aporte y su imaginación. Entre todos inventaron la historia, los personajes, los mundos y las aventuras de Super Miau.' },
+    { role: 'Nuestra escuela', names: ['Escuela N.º 3 “Justo José de Urquiza”'], detail: 'El lugar donde las ideas se encontraron, crecieron y se transformaron en un juego hecho con creatividad, compañerismo y muchas ganas de aprender.' },
+    { role: 'Historia y desarrollo del juego', names: ['Todos los niños y las niñas de 4.º grado'], detail: 'Cada ocurrencia, dibujo, desafío, personaje y decisión fue construyendo este viaje. Super Miau lleva un poquito de cada integrante del grado.' },
+    { role: 'Orquestadora del proyecto', names: ['Seño Cami'], detail: 'Acompañó al grupo, reunió todas las voces y ayudó a convertir las ideas de 4.º grado en una aventura que hoy podemos jugar y compartir.' },
+    { role: 'Un logro de todos', names: ['La gran familia de 4.º grado'], detail: 'Este juego demuestra que, cuando imaginamos y trabajamos juntos, una idea pequeña puede convertirse en un mundo enorme. ¡Felicitaciones, equipo!' }
 ];
 const CREDITS_JOURNEY = [
     { icon: '⛈️', title: 'Parque Sureño', text: 'Todo comenzó con el rayo, el árbol y la decisión de no dejar sola a la familia.' },
@@ -1398,6 +911,15 @@ let enemies = [];
 let particles = [];
 let backgroundDecorations = [];
 let bubbles = []; 
+let underwaterWhirlpools = [];
+let whirlpoolLaunchCooldown = 0;
+let whirlpoolTransit = null;
+let mantaRays = [];
+let ridingMantaRay = null;
+let ridingMantaTicks = 0;
+let octopusBoss = null;
+let octopusInkBlobs = [];
+let waterBubbleShots = [];
 let bones = []; 
 let hazards = []; // Meteoros/Debris para el Nivel 7
 let trafficCars = [];
@@ -1409,7 +931,65 @@ let batSprayPickup = null;
 let fallingWebs = [];
 let moleHoles = [];
 let tunnelMoles = [];
+let fallingTunnelRocks = [];
 let bridgePlanks = [];
+const DRAGON_SPRITES = {};
+['parado', 'enojado', 'atacando', 'golpeado', 'festejando'].forEach(pose => {
+    const image = new Image();
+    image.src = `assets/sprites/dragon_${pose}.png`;
+    DRAGON_SPRITES[pose] = image;
+});
+const DRAGON_AND_MIAU_SPRITE = new Image();
+DRAGON_AND_MIAU_SPRITE.decoding = 'async';
+DRAGON_AND_MIAU_SPRITE.src = 'assets/sprites/dragonymiau.png';
+const DRAGON_AND_MIAU_ATTACK_SPRITE = new Image();
+DRAGON_AND_MIAU_ATTACK_SPRITE.decoding = 'async';
+DRAGON_AND_MIAU_ATTACK_SPRITE.src = 'assets/sprites/dragonymiauataque.png';
+const DRAGON_WORLD_ENEMY_SPRITES = [1, 2, 3, 4, 5].map(index => {
+    const image = new Image();
+    image.decoding = 'async';
+    image.src = `assets/sprites/${index}.png`;
+    return image;
+});
+const FIRULAIS_FINAL_SPRITE = new Image();
+FIRULAIS_FINAL_SPRITE.decoding = 'async';
+FIRULAIS_FINAL_SPRITE.src = 'assets/sprites/perro.png';
+const FIRULAIS_ACTION_SPRITES = { idle: FIRULAIS_FINAL_SPRITE };
+[
+    ['attack', 'perroataque.png'],
+    ['hurt', 'perrodañado.png'],
+    ['jump', 'perrosalto.png']
+].forEach(([state, fileName]) => {
+    const image = new Image();
+    image.decoding = 'async';
+    image.src = `assets/sprites/${fileName}`;
+    FIRULAIS_ACTION_SPRITES[state] = image;
+});
+const FAMILY_SPRITES = {};
+['triste', 'feliz', 'caminando'].forEach(state => {
+    const image = new Image();
+    image.decoding = 'async';
+    image.src = `assets/sprites/familia${state}.png`;
+    FAMILY_SPRITES[state] = image;
+});
+const PORTAL_SPRITES = [1, 2, 3, 4].map(index => {
+    const image = new Image();
+    image.decoding = 'async';
+    image.src = `assets/sprites/port${index}.png`;
+    return image;
+});
+let dragonBoss = null;
+let dragonKey = null;
+let dragonEnemyProjectiles = [];
+let familyRescueSequence = { active: false, phase: 'idle', timer: 0, x: 0, y: 0, alpha: 1, completed: false };
+const DRAGON_LOCK_RIDDLES = [
+    { question: 'Si ROPA es 1234, ¿qué número es RAPO?\nR = 1 · O = 2 · P = 3 · A = 4', answer: '1432' },
+    { question: 'Si AMOR es 5678, ¿qué número es RAMO?\nA = 5 · M = 6 · O = 7 · R = 8', answer: '8567' },
+    { question: 'Si MALA es 3141, ¿qué número es LAMA?\nM = 3 · A = 1 · L = 4', answer: '4131' },
+    { question: 'Si COSA es 9876, ¿qué número es CASO?\nC = 9 · O = 8 · S = 7 · A = 6', answer: '9678' },
+    { question: 'Si PATO es 2468, ¿qué número es TAPO?\nP = 2 · A = 4 · T = 6 · O = 8', answer: '6428' }
+];
+let dragonLockPuzzle = { active: false, solved: false, riddle: null };
 // Extra de 2.3: una puerta al final lleva a una sala cerrada donde
 // el aerosol sirve para enfrentar a un vampiro caricaturesco.
 const VAMPIRE_ARENA = {
@@ -1436,7 +1016,6 @@ let vampireBattle = {
     playerHurtTimer: 0,
     introTimer: 0,
     batAttackCooldown: 0,
-    batAttackArmed: true,
     phase: 0
 };
 
@@ -1447,18 +1026,29 @@ let playerProjectiles = []; // Estrellas (Maullido estelar) disparados por el ju
 // Elemento de Meta / Portal Dimensional
 let flagpole = { x: LEVEL_WIDTH - 330, y: 280, width: 45, height: 100, reached: false };
 
-// El Jefe: Firulais (Nivel 6)
+// El Jefe: Firulais (Nivel 6). La batalla final se divide en tres
+// barras de tres impactos para que tenga duración sin depender de una
+// dificultad injusta.
+const FIRULAIS_HEALTH_BARS = 3;
+const FIRULAIS_HP_PER_BAR = 3;
+const FIRULAIS_MAX_HP = FIRULAIS_HEALTH_BARS * FIRULAIS_HP_PER_BAR;
+const FIRULAIS_MAX_ACTIVE_BONES = 2;
 let boss = {
     x: 2400,
     y: 280,
-    width: 80,
-    height: 100,
-    hp: 3,
-    maxHp: 3,
+    width: 105,
+    height: 110,
+    hp: FIRULAIS_MAX_HP,
+    maxHp: FIRULAIS_MAX_HP,
     vx: -2.2,
     dir: -1,
     hurtTimer: 0,
     shootTimer: 0,
+    attackTimer: 0,
+    jumpCooldown: 120,
+    vy: 0,
+    groundY: 270,
+    grounded: true,
     active: false // Inicialmente inactivo hasta que el jugador se acerque
 };
 
@@ -1525,6 +1115,16 @@ function createEnemyFromSpawn(spawn, type, index) {
             enemy.hp = 2;
             enemy.scoreValue = 3;
         }
+    } else if (type === 'dog_minion') {
+        enemy.spriteIndex = Math.max(1, Math.min(5, spawn.spriteIndex || (index % 5) + 1));
+        enemy.width = 58;
+        enemy.height = 52;
+        enemy.baseSpeed = 1.15 + enemy.spriteIndex * .12;
+        enemy.vx = -enemy.baseSpeed;
+        enemy.hp = enemy.spriteIndex >= 4 ? 3 : enemy.spriteIndex >= 2 ? 2 : 1;
+        enemy.scoreValue = 2 + enemy.spriteIndex;
+        enemy.abilityCooldown = 105 + index * 17;
+        enemy.activated = false;
     } else if (type === 'ghost') {
         enemy.width = 28;
         enemy.height = 22;
@@ -1661,8 +1261,8 @@ function initBackground() {
                        currentLevel === 2 && levelTwoSection === 3 ? 'rgba(67, 56, 202, 0.07)' :
                        currentLevel === 2 ? 'rgba(168, 85, 247, 0.05)' : // Morado Bosque 2.1
                        currentLevel === 3 ? 'rgba(34, 197, 94, 0.05)' :  // Verde Selva Bichos
-                       currentLevel === 4 ? 'rgba(239, 68, 68, 0.06)' :  // Lava
-                       currentLevel === 5 ? 'rgba(14, 116, 144, 0.05)' :  // Mar
+                       currentLevel === 5 ? 'rgba(239, 68, 68, 0.06)' :  // Lava
+                       currentLevel === 4 ? 'rgba(14, 116, 144, 0.05)' :  // Mar
                        currentLevel === 6 ? 'rgba(220, 38, 38, 0.08)' : 'rgba(239, 68, 68, 0.12)', // Castillo y Colapso
                 type: 'nebula',
                 depth: 0.15
@@ -1710,9 +1310,11 @@ function initBackground() {
             : [560, 1820, 2480];
         rootPositions.forEach(x => backgroundDecorations.push({ x, y: 378, type: 'root_arch', depth: 0.88 }));
     } else if (currentLevel === 3) {
-        // 3.2 se dibuja como túnel cerrado y no debe heredar árboles
-        // ni cielo. 3.1 y 3.3 sí conservan la escala vegetal gigante.
-        if (levelThreeSection !== 2) {
+        // 3.1 ya usa una ilustración completa del pantano: no se agregan
+        // las antiguas copas, hojas y hormigueros geométricos encima.
+        // 3.2 es un túnel cerrado y 3.3 conserva la vegetación necesaria
+        // para acompañar el recorrido elevado de lianas y puentes.
+        if (levelThreeSection === 3) {
             for (let i = 0; i < getDecorationCount(15, 10, 6); i++) {
                 backgroundDecorations.push({
                     x: i * 210 + Math.random() * 70,
@@ -1727,20 +1329,10 @@ function initBackground() {
             [180, 720, 1260, 1880, 2520, 3480, 4300, 4980].forEach((x, i) => backgroundDecorations.push({ x, y: 330 - (i % 2) * 35, size: 70 + (i % 3) * 18, type: 'giant_leaf', depth: 0.82 }));
             [520, 1700, 2860, 4020].forEach(x => backgroundDecorations.push({ x, y: 380, type: 'ant_hill', depth: 0.75 }));
         }
-    } else if (currentLevel === 4) {
-        // Volcanes del "El piso es lava"
-        for (let i = 0; i < getDecorationCount(10, 6, 4); i++) {
-            backgroundDecorations.push({
-                x: i * 350 - 50,
-                y: 380,
-                size: 150 + Math.random() * 80,
-                type: 'volcano',
-                depth: 0.3
-            });
-        }
+    } else if (currentLevel === 5) {
         [360, 1040, 1740, 2420, 2920].forEach((x, i) => backgroundDecorations.push({ x, y: 350, size: 45 + (i % 2) * 25, type: 'basalt_spire', depth: 0.78 }));
         [720, 1460, 2220, 2760].forEach((x, i) => backgroundDecorations.push({ x, y: 328, rune: (i % 3) + 1, type: 'paw_totem', depth: 0.9 }));
-    } else if (currentLevel === 5) {
+    } else if (currentLevel === 4) {
         // Rayos de luz submarinos
         for (let i = 0; i < getDecorationCount(15, 8, 5); i++) {
             backgroundDecorations.push({
@@ -1755,21 +1347,8 @@ function initBackground() {
         [160, 760, 1370, 2050, 2680].forEach((x, i) => backgroundDecorations.push({ x, y: 375, size: 35 + (i % 3) * 12, type: 'coral_garden', depth: 0.86 }));
         [560, 1640, 2500].forEach(x => backgroundDecorations.push({ x, y: 350, type: 'sunken_arch', depth: 0.72 }));
         for (let x = 80; x < LEVEL_WIDTH; x += getDecorationCount(260, 340, 480)) backgroundDecorations.push({ x, y: 380, height: 45 + (x % 90), type: 'kelp', depth: 0.92 });
-    } else if (currentLevel === 6) {
-        // Castillo de las Sombras
-        for (let i = 0; i < getDecorationCount(10, 7, 4); i++) {
-            backgroundDecorations.push({
-                x: i * 320,
-                y: 100 + Math.random() * 50,
-                width: 80,
-                height: 280,
-                type: 'castle_tower',
-                depth: 0.25
-            });
-        }
-        backgroundDecorations.push({ x: 800, y: 120, radius: 65, color1: '#ef4444', color2: '#7f1d1d', type: 'planet', depth: 0.2 });
-        [460, 980, 1520, 2040, 2600].forEach((x, i) => backgroundDecorations.push({ x, y: 170, mark: i % 2, type: 'torn_banner', depth: 0.72 }));
-        [730, 1810, 2820].forEach(x => backgroundDecorations.push({ x, y: 40, type: 'hanging_chain', depth: 0.88 }));
+    } else if (currentLevel === 6 && levelSixSection === 2) {
+        // 6.2 usa exclusivamente batallafinal1/2/3, sin el castillo procedural anterior.
     } else if (currentLevel === 7) {
         // Luces rojas de alarma de colapso
         for (let i = 0; i < getDecorationCount(15, 8, 5); i++) {
@@ -1783,7 +1362,6 @@ function initBackground() {
             });
         }
         [260, 720, 1160, 1620, 2080, 2580, 2980].forEach((x, i) => backgroundDecorations.push({ x, y: 120 + (i % 3) * 70, world: (i % 6) + 1, type: 'world_shard', depth: 0.65 }));
-        backgroundDecorations.push({ x: 3020, y: 210, type: 'dimensional_rift', depth: 0.92 });
     }
 }
 
@@ -1797,6 +1375,15 @@ function initLevel() {
     coins = [];
     enemies = [];
     bubbles = [];
+    underwaterWhirlpools = [];
+    whirlpoolLaunchCooldown = 0;
+    whirlpoolTransit = null;
+    mantaRays = [];
+    ridingMantaRay = null;
+    ridingMantaTicks = 0;
+    octopusBoss = null;
+    octopusInkBlobs = [];
+    waterBubbleShots = [];
     bones = [];
     hazards = []; // Limpiamos meteoritos
     trafficCars = [];
@@ -1808,7 +1395,14 @@ function initLevel() {
     fallingWebs = [];
     moleHoles = [];
     tunnelMoles = [];
+    fallingTunnelRocks = [];
     bridgePlanks = [];
+    dragonEnemyProjectiles = [];
+    familyRescueSequence = { active: false, phase: 'idle', timer: 0, x: 0, y: 0, alpha: 1, completed: false };
+    dragonKey = null;
+    dragonLockPuzzle = { active: false, solved: false, riddle: null };
+    ui.dragonPuzzleOverlay.classList.add('hidden');
+    ui.dragonPuzzleOverlay.classList.remove('flex');
     poppedPowerups = [];
     playerProjectiles = [];
     player.coyoteFrames = 0;
@@ -1832,11 +1426,35 @@ function initLevel() {
     player.batSprayFlashTimer = 0;
     resetVampireBattle();
 
+    if (currentLevel === 5 && levelFiveSection === 3) {
+        const zone = blueprint.dragonZone;
+        dragonBoss = {
+            x: zone.x, y: zone.y, width: zone.width, height: zone.height,
+            rescued: false, mounted: false, unlockTimer: 0, celebrationTimer: 0, facing: -1
+        };
+        dragonKey = { collected: false };
+    } else if (currentLevel === 6 && levelSixSection === 1) {
+        dragonBoss = {
+            x: player.x - 59, y: player.y - 48, width: 150, height: 205,
+            rescued: true, mounted: true, unlockTimer: 0, celebrationTimer: 0, facing: 1
+        };
+        dragonKey = { collected: true };
+    } else {
+        dragonBoss = null;
+        dragonKey = null;
+    }
+
     boss.active = false; 
-    boss.hp = 3;
+    boss.hp = boss.maxHp;
     boss.x = blueprint.bossZone ? blueprint.bossZone.bossX : 4380;
     boss.y = blueprint.bossZone ? blueprint.bossZone.bossY : 280;
+    boss.groundY = boss.y;
     boss.vx = -2.2;
+    boss.vy = 0;
+    boss.grounded = true;
+    boss.attackTimer = 0;
+    boss.attackFacing = -1;
+    boss.jumpCooldown = 110;
     princess.jailed = true;
     princess.x = blueprint.rescueX || princess.x;
     flagpole.reached = false;
@@ -1859,26 +1477,44 @@ function initLevel() {
             player.powerTimer = 0;
         }
     }
+    if (currentLevel === 6 && levelSixSection === 2) {
+        player.powerup = 'lightning';
+        player.powerTimer = 0;
+        player.width = player.baseWidth;
+        player.height = player.baseHeight;
+    }
     updatePowerBadge();
 
-    // Activar/Desactivar interfaz de oxígeno para el Nivel Acuático (Nivel 5)
-    if (currentLevel === 5) {
-        ui.oxygenBadge.style.display = 'flex';
+    // Activar/Desactivar interfaz de oxígeno para el Nivel Acuático (Nivel 4)
+    if (currentLevel === 4) {
+        ui.oxygenBadge.classList.remove('hidden');
+        ui.oxygenBadge.classList.add('flex');
         player.oxygen = 100;
+        ui.oxygenBar.style.width = '100%';
         ui.btnDown.classList.remove('hidden');
         ui.btnDown.textContent = '⬇️';
         ui.btnDown.setAttribute('aria-label', 'Nadar hacia abajo');
         ui.btnJumpIcon.textContent = '🫧';
         ui.btnJumpText.textContent = 'NADAR';
+    } else if (currentLevel === 6 && levelSixSection === 1) {
+        ui.oxygenBadge.classList.add('hidden');
+        ui.oxygenBadge.classList.remove('flex');
+        ui.btnDown.classList.remove('hidden');
+        ui.btnDown.textContent = '⬇️';
+        ui.btnDown.setAttribute('aria-label', 'Volar hacia abajo');
+        ui.btnJumpIcon.textContent = '⬆️';
+        ui.btnJumpText.textContent = 'VOLAR';
     } else if (currentLevel === 3 && levelThreeSection === 2) {
-        ui.oxygenBadge.style.display = 'none';
+        ui.oxygenBadge.classList.add('hidden');
+        ui.oxygenBadge.classList.remove('flex');
         ui.btnDown.classList.remove('hidden');
         ui.btnDown.textContent = '🕳️';
         ui.btnDown.setAttribute('aria-label', 'Esconderse en un agujero');
         ui.btnJumpIcon.textContent = '🦘';
         ui.btnJumpText.textContent = 'SALTAR';
     } else {
-        ui.oxygenBadge.style.display = 'none';
+        ui.oxygenBadge.classList.add('hidden');
+        ui.oxygenBadge.classList.remove('flex');
         ui.btnDown.classList.add('hidden');
         ui.btnDown.textContent = '⬇️';
         ui.btnDown.setAttribute('aria-label', 'Nadar hacia abajo');
@@ -1925,13 +1561,19 @@ function initLevel() {
             ringIndex: layout.ringIndex,
             bridgeGroup: layout.bridgeGroup,
             plankIndex: layout.plankIndex,
+            searchSpot: layout.searchSpot,
             hasBeenHit: false,
             bounceOffset: 0
         });
     });
 
-    if (currentLevel === 3 && levelThreeSection === 3) {
-        bridgePlanks = blocks.filter(block => block.type === 'bridge_plank');
+    if (currentLevel === 5 && levelFiveSection === 3) {
+        const searchBlocks = blocks.filter(block => block.searchSpot);
+        if (searchBlocks.length) searchBlocks[Math.floor(Math.random() * searchBlocks.length)].hasDragonKey = true;
+    }
+
+    if ((currentLevel === 3 && levelThreeSection === 3) || (currentLevel === 5 && levelFiveSection === 2)) {
+        bridgePlanks = blocks.filter(block => block.type === 'bridge_plank' || block.type === 'lava_stone');
         bridgePlanks.forEach(plank => {
             plank.fallTimer = -1;
             plank.falling = false;
@@ -1953,8 +1595,10 @@ function initLevel() {
             eType = levelTwoSection === 2 ? 'zombie' : 'ghost';
         } else if (currentLevel === 3) {
             eType = 'bug'; // Nivel 3: Bichos gigantes
-        } else if (currentLevel === 5) {
-            eType = 'jellyfish'; // Nivel 5: Mar profundo
+        } else if (currentLevel === 4) {
+            eType = 'jellyfish'; // Nivel 4: Mar profundo
+        } else if (currentLevel === 6 && levelSixSection === 1) {
+            eType = 'dog_minion';
         }
         enemies.push(createEnemyFromSpawn(spawn, eType, enemies.length));
     });
@@ -1976,7 +1620,26 @@ function initLevel() {
 
     if (currentLevel === 3 && levelThreeSection === 2) {
         [390, 1030, 1690, 2370, 3070, 3770, 4480].forEach((x, index) => {
-            moleHoles.push({ x, y: 365, width: 132, height: 24, phase: index * 0.6 });
+            moleHoles.push({
+                x,
+                y: 365,
+                width: 142,
+                height: 34,
+                phase: index * 0.6
+            });
+        });
+        [650, 1260, 1940, 2640, 3340, 4050, 4750].forEach((x, index) => {
+            fallingTunnelRocks.push({
+                x,
+                y: -70 - index * 9,
+                width: 42 + (index % 3) * 9,
+                height: 38 + (index % 2) * 10,
+                vy: 0,
+                rotation: index * 0.7,
+                spin: index % 2 ? .045 : -.038,
+                state: 'armed',
+                cooldown: index * 16
+            });
         });
         [760, 1390, 2050, 2760, 3450, 4160, 4820].forEach((x, index) => {
             tunnelMoles.push({
@@ -2052,7 +1715,7 @@ function initLevel() {
 
     // Estaciones de burbujas de aire. Permanecen en lugares útiles del
     // recorrido y reaparecen unos segundos después de ser utilizadas.
-    if (currentLevel === 5) {
+    if (currentLevel === 4) {
         const bubblePositions = [
             {x: 350, y: 300}, {x: 720, y: 220}, {x: 1120, y: 275},
             {x: 1510, y: 145}, {x: 1960, y: 185},
@@ -2072,6 +1735,40 @@ function initLevel() {
                 phase: index * 0.9
             });
         });
+
+        if (levelFourSection === 2) {
+            [720, 1510, 2300, 3140, 3980, 4700].forEach((x, index) => {
+                underwaterWhirlpools.push({
+                    x,
+                    y: index % 2 ? 245 : 175,
+                    radius: 92 + (index % 3) * 12,
+                    direction: index % 2 ? -1 : 1,
+                    phase: index * 1.1,
+                    exitIndex: index % 2 === 0 ? index + 1 : index - 1
+                });
+            });
+            [360].forEach((x, index) => {
+                mantaRays.push({
+                    x,
+                    y: 285,
+                    width: 112,
+                    height: 34,
+                    vx: 1.8,
+                    vy: 0,
+                    minX: 180,
+                    maxX: 800,
+                    phase: 0
+                });
+            });
+        }
+        if (levelFourSection === 3) {
+            octopusBoss = {
+                x: 4520, y: 165, width: 118, height: 118,
+                hp: 14, maxHp: 14, active: false, defeated: false,
+                playerHp: 100, playerMaxHp: 100,
+                attackCooldown: 80, hurtTimer: 0, phase: 0
+            };
+        }
     }
 }
 
@@ -2182,6 +1879,15 @@ function startGame(options = {}) {
     levelThreeSection = currentLevel === 3 && Number.isFinite(requestedSection)
         ? Math.max(1, Math.min(3, Math.floor(requestedSection)))
         : 1;
+    levelFourSection = currentLevel === 4 && Number.isFinite(requestedSection)
+        ? Math.max(1, Math.min(3, Math.floor(requestedSection)))
+        : 1;
+    levelFiveSection = currentLevel === 5 && Number.isFinite(requestedSection)
+        ? Math.max(1, Math.min(3, Math.floor(requestedSection)))
+        : 1;
+    levelSixSection = currentLevel === 6 && Number.isFinite(requestedSection)
+        ? Math.max(1, Math.min(2, Math.floor(requestedSection)))
+        : 1;
     player.x = 100;
     player.y = 300;
     player.vx = 0;
@@ -2262,9 +1968,12 @@ function startGame(options = {}) {
 // Inicia una partida de prueba en el nivel elegido desde el menu.
 function startDeveloperLevel() {
     playSound('click');
+    const selectedLevel = ui.devLevelSelect.value || '1.1';
+    const useShopLoadout = ui.devUseShopUpgrades.checked;
+    toggleDeveloperPanel(false);
     startGame({
-        startLevel: ui.devLevelSelect.value || '1.1',
-        useShopLoadout: ui.devUseShopUpgrades.checked,
+        startLevel: selectedLevel,
+        useShopLoadout,
         consumeShopLoadout: false
     });
 }
@@ -2348,12 +2057,77 @@ function transitionNext() {
         physicsAccumulator = 0;
         animationFrameId = requestAnimationFrame(loop);
         syncShellChrome();
+    } else if (currentLevel === 4 && levelFourSection < 3) {
+        levelFourSection++;
+        refreshLevelHud();
+        player.x = 100;
+        player.y = 220;
+        player.vx = 0;
+        player.vy = 0;
+        player.invulnerable = 0;
+        player.oxygen = 100;
+        cameraX = 0;
+        initBackground();
+        initLevel();
+        gameActive = true;
+        isPaused = false;
+        gameOver = false;
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        lastTime = performance.now();
+        physicsAccumulator = 0;
+        animationFrameId = requestAnimationFrame(loop);
+        syncShellChrome();
+    } else if (currentLevel === 5 && levelFiveSection < 3) {
+        levelFiveSection++;
+        refreshLevelHud();
+        player.x = 100;
+        player.y = 300;
+        player.vx = 0;
+        player.vy = 0;
+        player.jumpHeld = false;
+        player.jumpHoldFrames = 0;
+        player.invulnerable = 0;
+        cameraX = 0;
+        initBackground();
+        initLevel();
+        gameActive = true;
+        isPaused = false;
+        gameOver = false;
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        lastTime = performance.now();
+        physicsAccumulator = 0;
+        animationFrameId = requestAnimationFrame(loop);
+        syncShellChrome();
+    } else if (currentLevel === 6 && levelSixSection < 2) {
+        levelSixSection++;
+        refreshLevelHud();
+        player.x = 100;
+        player.y = 300;
+        player.vx = 0;
+        player.vy = 0;
+        player.jumpHeld = false;
+        player.jumpHoldFrames = 0;
+        player.invulnerable = 0;
+        cameraX = 0;
+        initBackground();
+        initLevel();
+        gameActive = true;
+        isPaused = false;
+        gameOver = false;
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        lastTime = performance.now();
+        physicsAccumulator = 0;
+        animationFrameId = requestAnimationFrame(loop);
+        syncShellChrome();
     } else if (currentLevel < 7) {
         grantInterLevelReward(currentLevel);
         currentLevel++;
         levelOneSection = 1;
         levelTwoSection = 1;
         levelThreeSection = 1;
+        levelFourSection = 1;
+        levelFiveSection = 1;
+        levelSixSection = 1;
         refreshLevelHud();
         player.x = 100;
         player.y = 300;
@@ -2387,10 +2161,7 @@ function transitionNext() {
 // Devuelve al menu principal y restablece el estado visual basico.
 function resetToMain() {
     resetInputState();
-    if (cutsceneAnimationFrameId) cancelAnimationFrame(cutsceneAnimationFrameId);
-    cutsceneAnimationFrameId = null;
     cutsceneActive = false;
-    cutsceneStartTime = null;
     setCutsceneVisible(false);
     clearCreditsAnimations();
     resetFinalPortalSequence();
@@ -2429,6 +2200,9 @@ function stopCreditsAutoScroll(resetPosition = false) {
     if (resetPosition && ui.creditsViewport) {
         ui.creditsViewport.scrollTop = 0;
     }
+    if (resetPosition && ui.creditsScreen) {
+        ui.creditsScreen.scrollTop = 0;
+    }
 }
 
 function clearCreditsAnimations() {
@@ -2441,10 +2215,13 @@ function startCreditsAutoScroll() {
     stopCreditsAutoScroll(false);
     if (!ui.creditsViewport) return;
 
-    const viewport = ui.creditsViewport;
+    const viewport = ui.creditsScreen;
     viewport.scrollTop = 0;
+    let scrollPosition = 0;
     let lastTime = 0;
-    let pauseUntil = performance.now() + 1700;
+    // Da tiempo para leer el encabezado y después hace subir las tarjetas a
+    // una velocidad clara pero tranquila para lectores pequeños.
+    let pauseUntil = performance.now() + 2400;
 
     const step = (timestamp) => {
         if (ui.creditsScreen.classList.contains('hidden')) {
@@ -2459,7 +2236,10 @@ function startCreditsAutoScroll() {
         if (timestamp >= pauseUntil) {
             const maxScroll = Math.max(0, viewport.scrollHeight - viewport.clientHeight);
             if (maxScroll > 0) {
-                viewport.scrollTop = Math.min(maxScroll, viewport.scrollTop + delta * 0.018);
+                // Se acumulan fracciones de píxel fuera de scrollTop porque
+                // algunos navegadores las redondean y dejarían la barra quieta.
+                scrollPosition = Math.min(maxScroll, scrollPosition + delta * 0.032);
+                viewport.scrollTop = scrollPosition;
             }
         }
 
@@ -2491,7 +2271,7 @@ function renderCreditsList(entries = DEFAULT_CREDITS) {
         <div class="rounded-3xl border border-emerald-400/25 bg-emerald-950/15 px-4 py-5 text-center">
             <p class="text-xs font-extrabold uppercase tracking-[0.22em] text-emerald-300">Fin del Viaje</p>
             <p class="mt-2 text-xl font-bold text-white">Super Miau volvió a casa</p>
-            <p class="mt-2 text-sm leading-relaxed text-emerald-100/85">Cuando me pases los nombres finales, esta sección ya queda lista para recibirlos con una presentación mucho más linda.</p>
+            <p class="mt-2 text-sm leading-relaxed text-emerald-100/85">Super Miau volvió a casa, pero la aventura que creó 4.º grado recién empieza. Gracias por imaginar, compartir y construir este juego entre todos.</p>
         </div>
     `;
 }
@@ -2509,7 +2289,7 @@ function showCreditsScreen() {
     ui.creditsViewport.scrollTop = 0;
     ui.creditsKicker.textContent = 'Epílogo';
     ui.creditsTitle.textContent = 'El regreso al Parque Sureño';
-    ui.creditsLead.textContent = 'La última grieta se rompe en el cielo y la noche vuelve a respirar. Super Miau ya no corre para escapar: ahora corre hacia casa.';
+    ui.creditsLead.textContent = 'Una aventura creada por 4.º grado de la Escuela N.º 3 “Justo José de Urquiza”, con las ideas y la imaginación de todo el grupo.';
     ui.creditsHint.textContent = 'Un pequeño momento de calma antes de ver todo el viaje completo.';
     ui.creditsThanks.textContent = 'La lista se moverá sola después de un instante, pero podés deslizarla si querés leer con calma.';
     ui.creditsPanel.classList.add('opacity-0', 'translate-y-6', 'scale-[0.98]');
@@ -2524,7 +2304,7 @@ function showCreditsScreen() {
     creditsAnimationTimers.push(window.setTimeout(() => {
         ui.creditsKicker.textContent = 'Créditos';
         ui.creditsTitle.textContent = 'Super Miau: Final del Viaje';
-        ui.creditsLead.textContent = 'Cada mundo dejó una marca distinta, pero todos terminaron empujando a Miau hacia el mismo lugar: su familia y su hogar.';
+        ui.creditsLead.textContent = 'Cada mundo, personaje y desafío nació de un proyecto compartido. Super Miau existe porque todo 4.º grado imaginó y creó en equipo.';
         ui.creditsHint.textContent = 'Gracias por jugar a Super Miau.';
         ui.creditsList.classList.remove('opacity-0');
         ui.creditsStoryline.classList.remove('opacity-0', 'translate-y-4');
@@ -2534,7 +2314,7 @@ function showCreditsScreen() {
         ui.creditsHint.textContent = 'Los créditos avanzan solos. Podés frenar y releer cuando quieras.';
     }, 1850));
     creditsAnimationTimers.push(window.setTimeout(() => {
-        ui.creditsThanks.textContent = 'Gracias por acompañar a Super Miau hasta el final. Solo faltan los nombres definitivos.';
+        ui.creditsThanks.textContent = 'Con mucho cariño para cada niño y cada niña de 4.º grado. Este juego también es suyo: ¡felicitaciones por esta aventura increíble!';
     }, 3200));
 }
 
@@ -2557,7 +2337,7 @@ function closeCreditsToMenu() {
 function startFinalPortalSequence() {
     finalPortalSequence.active = true;
     finalPortalSequence.phase = 'approach';
-    finalPortalSequence.timer = 62;
+    finalPortalSequence.timer = 240;
     finalPortalSequence.collapse = 0;
     finalPortalSequence.shatter = 0;
     finalPortalSequence.fade = 0;
@@ -2617,21 +2397,21 @@ function updateFinalPortalSequence() {
 
     if (finalPortalSequence.phase === 'approach') {
         finalPortalSequence.pulse = Math.min(0.45, finalPortalSequence.pulse + 0.014);
-        if (finalPortalSequence.timer <= 0 || Math.abs(player.x - portalCenterX) < 2.5) {
+        if (finalPortalSequence.timer <= 0) {
             finalPortalSequence.phase = 'stabilize';
-            finalPortalSequence.timer = 38;
+            finalPortalSequence.timer = 240;
             finalPortalSequence.message = 'El portal intenta resistir';
             finalPortalSequence.detail = 'Todo el cielo vibra mientras la grieta busca quedarse abierta.';
             triggerShake(16, 4);
             playSound('portalCharge');
         }
     } else if (finalPortalSequence.phase === 'stabilize') {
-        finalPortalSequence.pulse = 0.35 + Math.sin((38 - finalPortalSequence.timer) * 0.18) * 0.12;
-        finalPortalSequence.beam = Math.min(0.55, (38 - finalPortalSequence.timer) / 68);
-        finalPortalSequence.collapse = Math.max(0, Math.sin((38 - finalPortalSequence.timer) * 0.12) * 0.08);
+        finalPortalSequence.pulse = 0.35 + Math.sin((240 - finalPortalSequence.timer) * 0.18) * 0.12;
+        finalPortalSequence.beam = Math.min(0.55, (240 - finalPortalSequence.timer) / 160);
+        finalPortalSequence.collapse = Math.max(0, Math.sin((240 - finalPortalSequence.timer) * 0.12) * 0.08);
         if (finalPortalSequence.timer <= 0) {
             finalPortalSequence.phase = 'surge';
-            finalPortalSequence.timer = 40;
+            finalPortalSequence.timer = 240;
             finalPortalSequence.message = 'La energía del regreso atraviesa el cielo';
             finalPortalSequence.detail = 'La ciudad vuelve a aparecer detrás del brillo.';
             finalPortalSequence.flash = 0.55;
@@ -2639,8 +2419,8 @@ function updateFinalPortalSequence() {
             triggerShake(22, 6);
         }
     } else if (finalPortalSequence.phase === 'surge') {
-        finalPortalSequence.pulse = 0.5 + Math.sin((40 - finalPortalSequence.timer) * 0.3) * 0.15;
-        finalPortalSequence.beam = Math.min(1, 0.72 + (40 - finalPortalSequence.timer) / 50);
+        finalPortalSequence.pulse = 0.5 + Math.sin((240 - finalPortalSequence.timer) * 0.3) * 0.15;
+        finalPortalSequence.beam = Math.min(1, 0.72 + (240 - finalPortalSequence.timer) / 180);
         if (gameTick % 3 === 0) {
             particles.push(new Particle(
                 portalWorldCenterX + (Math.random() - 0.5) * 30,
@@ -2655,19 +2435,19 @@ function updateFinalPortalSequence() {
         }
         if (finalPortalSequence.timer <= 0) {
             finalPortalSequence.phase = 'closing';
-            finalPortalSequence.timer = 60;
+            finalPortalSequence.timer = 240;
             finalPortalSequence.message = 'La grieta se pliega sobre sí misma';
             finalPortalSequence.detail = 'Nada podrá volver a arrastrar a la familia lejos de casa.';
             triggerShake(28, 8);
         }
     } else if (finalPortalSequence.phase === 'closing') {
-        finalPortalSequence.collapse = 1 - (finalPortalSequence.timer / 60);
+        finalPortalSequence.collapse = 1 - (finalPortalSequence.timer / 240);
         finalPortalSequence.pulse = Math.max(0.15, 0.8 - finalPortalSequence.collapse * 0.5);
         finalPortalSequence.beam = Math.max(0.18, 1 - finalPortalSequence.collapse * 0.75);
         finalPortalSequence.playerAlpha = Math.max(0.2, 1 - finalPortalSequence.collapse * 0.92);
         if (finalPortalSequence.timer <= 0) {
             finalPortalSequence.phase = 'shatter';
-            finalPortalSequence.timer = 54;
+            finalPortalSequence.timer = 240;
             finalPortalSequence.message = 'El último portal estalla en mil luces';
             finalPortalSequence.detail = 'Ya no queda regreso posible, solo la casa esperando.';
             finalPortalSequence.playerAlpha = 0;
@@ -2676,7 +2456,7 @@ function updateFinalPortalSequence() {
             playSound('portalBurst');
         }
     } else if (finalPortalSequence.phase === 'shatter') {
-        finalPortalSequence.shatter = 1 - (finalPortalSequence.timer / 54);
+        finalPortalSequence.shatter = 1 - (finalPortalSequence.timer / 240);
         finalPortalSequence.pulse = Math.max(0, 0.5 - finalPortalSequence.shatter * 0.5);
         finalPortalSequence.beam = Math.max(0, 0.42 - finalPortalSequence.shatter * 0.42);
         if (!finalPortalSequence.shardsSpawned) {
@@ -2696,7 +2476,7 @@ function updateFinalPortalSequence() {
         }
         if (finalPortalSequence.timer <= 0) {
             finalPortalSequence.phase = 'reunion';
-            finalPortalSequence.timer = 42;
+            finalPortalSequence.timer = 240;
             finalPortalSequence.message = 'La ciudad vuelve a encenderse';
             finalPortalSequence.detail = 'El Parque Sureño ya está del otro lado del resplandor.';
             finalPortalSequence.flash = 0.4;
@@ -2704,7 +2484,7 @@ function updateFinalPortalSequence() {
         }
     } else if (finalPortalSequence.phase === 'reunion') {
         finalPortalSequence.homeGlow = Math.min(1, finalPortalSequence.homeGlow + 0.028);
-        finalPortalSequence.fade = Math.max(0, (42 - finalPortalSequence.timer) / 140);
+        finalPortalSequence.fade = Math.max(0, (240 - finalPortalSequence.timer) / 600);
         if (gameTick % 4 === 0) {
             particles.push(new Particle(
                 portalWorldCenterX + (Math.random() - 0.5) * 90,
@@ -2719,20 +2499,20 @@ function updateFinalPortalSequence() {
         }
         if (finalPortalSequence.timer <= 0) {
             finalPortalSequence.phase = 'afterglow';
-            finalPortalSequence.timer = 42;
+            finalPortalSequence.timer = 240;
             finalPortalSequence.message = 'La noche por fin se queda en silencio';
             finalPortalSequence.detail = 'Solo queda respirar, mirar el cielo y volver a casa.';
         }
     } else if (finalPortalSequence.phase === 'afterglow') {
-        finalPortalSequence.fade = Math.max(0.12, (42 - finalPortalSequence.timer) / 105);
+        finalPortalSequence.fade = Math.max(0.12, (240 - finalPortalSequence.timer) / 520);
         if (finalPortalSequence.timer <= 0) {
             finalPortalSequence.phase = 'fade';
-            finalPortalSequence.timer = 62;
+            finalPortalSequence.timer = 300;
             finalPortalSequence.message = 'Super Miau volvió a casa';
-            finalPortalSequence.detail = 'La aventura baja el ritmo antes de abrir los créditos.';
+            finalPortalSequence.detail = 'Miau mira a su familia: están juntos, a salvo y otra vez en casa.';
         }
     } else if (finalPortalSequence.phase === 'fade') {
-        finalPortalSequence.fade = 1 - (finalPortalSequence.timer / 62);
+        finalPortalSequence.fade = 1 - (finalPortalSequence.timer / 300);
         if (finalPortalSequence.timer <= 0) {
             resetFinalPortalSequence();
             showCreditsScreen();
@@ -2743,9 +2523,37 @@ function updateFinalPortalSequence() {
     return true;
 }
 
-// Gestiona el da?o recibido, las vidas restantes y los mensajes de derrota o continuidad.
+function restoreFallingPlatforms() {
+    bridgePlanks.forEach(plank => {
+        plank.y = plank.originalY;
+        plank.fallTimer = -1;
+        plank.falling = false;
+        plank.fallen = false;
+        plank.fallVy = 0;
+    });
+}
+
+function getBridgeRespawnPoint(deathX) {
+    if (deathX >= 4500) return { x: 4660, y: 295 };
+    if (deathX >= 3540) return { x: 3650, y: 295 };
+    if (deathX >= 2240) return { x: 2520, y: 295 };
+    if (deathX >= 1350) return { x: 1450, y: 295 };
+    return { x: 500, y: 295 };
+}
+
+// Al agotar las vidas se conserva el mundo alcanzado, pero se vuelve a su
+// primera etapa para que el castigo no obligue a repetir toda la aventura.
+function restartCurrentWorld() {
+    startGame({
+        startLevel: `${currentLevel}.1`,
+        consumeShopLoadout: false
+    });
+}
+
+// Gestiona el daño recibido, las vidas restantes y los mensajes de derrota o continuidad.
 function handlePlayerDeath() {
-    if (player.powerup !== 'none') {
+    const keepFinalBattleAttack = currentLevel === 6 && levelSixSection === 2;
+    if (!keepFinalBattleAttack && player.powerup !== 'none') {
         player.powerup = 'none';
         player.powerTimer = 0;
         player.width = player.baseWidth;
@@ -2765,12 +2573,13 @@ function handlePlayerDeath() {
     if (player.lives <= 0) {
         gameActive = false;
         playSound('gameover');
-        showOverlay('💀', '¡FIN DEL JUEGO!', '¡Te has quedado sin vidas estelares!', 'Volver a Intentar 🔄', () => {
-            startGame();
-        });
+        showOverlay('💀', '¡FIN DEL JUEGO!', `¡Te has quedado sin vidas estelares! Volvés al inicio del mundo ${currentLevel}.`, 'Reintentar desde el .1 🔄', restartCurrentWorld);
     } else {
-        player.x = Math.max(100, cameraX + 50);
-        player.y = 100;
+        const bridgeRespawn = currentLevel === 3 && levelThreeSection === 3
+            ? getBridgeRespawnPoint(player.x)
+            : null;
+        player.x = bridgeRespawn ? bridgeRespawn.x : Math.max(100, cameraX + 50);
+        player.y = bridgeRespawn ? bridgeRespawn.y : 100;
         player.vx = 0;
         player.vy = 0;
         player.jumpHeld = false;
@@ -2781,6 +2590,15 @@ function handlePlayerDeath() {
         player.ringReleaseArmed = false;
         player.hangSwing = 0;
         player.invulnerable = 70; 
+
+        // Los puentes y las piedras vuelven a su posición al perder una vida.
+        // En 3.3 Miau reaparece sobre la última isla firme alcanzada.
+        if ((currentLevel === 3 && levelThreeSection === 3) || (currentLevel === 5 && levelFiveSection === 2)) {
+            restoreFallingPlatforms();
+        }
+        if (currentLevel === 5 && levelFiveSection === 2) {
+            hazards = hazards.filter(hazard => hazard.kind !== 'lava_drop');
+        }
 
         // Resetear el temporizador si estamos en el nivel 7 para dar un respiro al reaparecer
         if (currentLevel === 7) {
@@ -2811,7 +2629,7 @@ function showOverlay(emoji, title, msg, btnText = "Siguiente ➡️", action = t
 
 // Alterna entre juego activo y pausa sin perder el estado de la partida.
 function togglePause() {
-    if (!gameActive || gameOver) return;
+    if (!gameActive || gameOver || dragonLockPuzzle.active) return;
     isPaused = !isPaused;
     if (isPaused) {
         playSound('click');
@@ -2856,14 +2674,13 @@ function goToMainMenu() {
     isPaused = false;
     cutsceneActive = false;
     resetFinalPortalSequence();
-    if (cutsceneAnimationFrameId) cancelAnimationFrame(cutsceneAnimationFrameId);
-    cutsceneAnimationFrameId = null;
-    cutsceneStartTime = null;
     setCutsceneVisible(false);
     if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
     }
     ui.gameOverlay.classList.add('hidden');
+    ui.dragonPuzzleOverlay.classList.add('hidden');
+    ui.dragonPuzzleOverlay.classList.remove('flex');
     ui.creditsScreen.classList.add('hidden');
     ui.startScreen.classList.remove('hidden');
     syncWalletDisplays();
@@ -2872,6 +2689,11 @@ function goToMainMenu() {
 
 // Inputs Teclado
 window.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && developerPanelVisible) {
+        e.preventDefault();
+        toggleDeveloperPanel(false);
+        return;
+    }
     if (e.ctrlKey && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
         e.preventDefault();
         toggleDeveloperPanel();
@@ -2894,11 +2716,15 @@ window.addEventListener('keydown', e => {
         return;
     }
     keys[e.key] = true;
-    if (['Space', ' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) || ((currentLevel === 5 || (currentLevel === 3 && levelThreeSection === 2)) && (e.key === 's' || e.key === 'S'))) {
+    if (['Space', ' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) || ((currentLevel === 4 || (currentLevel === 3 && levelThreeSection === 2) || (currentLevel === 6 && levelSixSection === 1)) && (e.key === 's' || e.key === 'S'))) {
         e.preventDefault();
     }
     if (e.key === 'f' || e.key === 'F' || e.key === 'Shift') {
-        if (currentLevel === 2 && levelTwoSection === 3 && player.batSprayOwned && player.batSprayCooldown === 0) {
+        if (((currentLevel === 5 && levelFiveSection === 3) || (currentLevel === 6 && levelSixSection === 1)) && dragonBoss?.mounted) {
+            shootDragonFire();
+        } else if (currentLevel === 4 && levelFourSection === 3) {
+            shootWaterBubble();
+        } else if (currentLevel === 2 && levelTwoSection === 3 && player.batSprayOwned && player.batSprayCooldown === 0) {
             useBatSpray();
         } else if (player.powerup === 'lightning' && player.shootCooldown === 0) {
             shootLightning();
@@ -2936,7 +2762,11 @@ setupTouch('btnJump', 'ArrowUp');
 
 ui.btnShoot.addEventListener('touchstart', (e) => {
     e.preventDefault();
-    if (currentLevel === 2 && levelTwoSection === 3 && player.batSprayOwned && player.batSprayCooldown === 0) {
+    if (((currentLevel === 5 && levelFiveSection === 3) || (currentLevel === 6 && levelSixSection === 1)) && dragonBoss?.mounted) {
+        shootDragonFire();
+    } else if (currentLevel === 4 && levelFourSection === 3) {
+        shootWaterBubble();
+    } else if (currentLevel === 2 && levelTwoSection === 3 && player.batSprayOwned && player.batSprayCooldown === 0) {
         useBatSpray();
     } else if (player.powerup === 'lightning' && player.shootCooldown === 0) {
         shootLightning();
@@ -2965,6 +2795,7 @@ function isPlaygroundNonSolid(block) {
         if (block.type === 'hanging_vine') return true;
         if (block.type === 'bridge_plank' && block.falling) return true;
     }
+    if (currentLevel === 5 && levelFiveSection === 2 && block.type === 'lava_stone' && block.falling) return true;
     return false;
 }
 
@@ -3182,6 +3013,48 @@ function updateLevelThreeMechanics() {
             if (!wasHidden) playSound('coin');
         }
 
+        fallingTunnelRocks.forEach(rock => {
+            if (rock.cooldown > 0) rock.cooldown--;
+            if (rock.state === 'armed') {
+                if (rock.cooldown <= 0 && Math.abs(playerCenter - rock.x) < 185) {
+                    rock.state = 'warning';
+                    rock.cooldown = 38;
+                }
+                return;
+            }
+            if (rock.state === 'warning') {
+                rock.cooldown--;
+                if (rock.cooldown <= 0) {
+                    rock.state = 'falling';
+                    rock.y = -55;
+                    rock.vy = 3.2;
+                    playSound('hurt');
+                }
+                return;
+            }
+
+            rock.vy = Math.min(12, rock.vy + .32);
+            rock.y += rock.vy;
+            rock.rotation += rock.spin;
+            if (!player.hiddenInHole && player.invulnerable <= 0 && checkCollision(player, rock)) {
+                player.invulnerable = shopUpgrades.shieldActive ? 130 : 70;
+                player.hurtAnimationTimer = 25;
+                triggerShake(18, 7);
+                handlePlayerDeath();
+                return;
+            }
+            if (rock.y > 390) {
+                triggerShake(8, 3);
+                for (let i = 0; i < 7; i++) {
+                    particles.push(new Particle(rock.x + rock.width / 2, 378, (Math.random() - .5) * 4, -Math.random() * 2.5, '#a8a29e', 2.5, 22, 'dust'));
+                }
+                rock.state = 'armed';
+                rock.y = -70;
+                rock.vy = 0;
+                rock.cooldown = 210 + Math.floor(Math.random() * 150);
+            }
+        });
+
         for (const mole of tunnelMoles) {
             if (mole.spottedFlash > 0) mole.spottedFlash--;
             if (mole.alertTimer > 0) mole.alertTimer--;
@@ -3235,6 +3108,280 @@ function updateLevelThreeMechanics() {
             if (plank.y > WORLD_HEIGHT + 70) plank.fallen = true;
         }
     });
+}
+
+function updateLevelFiveMechanics() {
+    if (currentLevel !== 5 || levelFiveSection !== 2) return;
+
+    bridgePlanks.forEach(stone => {
+        if (stone.fallen) return;
+        if (stone.fallTimer >= 0 && !stone.falling) {
+            stone.fallTimer--;
+            if (stone.fallTimer <= 0) {
+                stone.falling = true;
+                stone.fallVy = 1.2;
+                playSound('stomp');
+            }
+        }
+        if (stone.falling) {
+            stone.fallVy = Math.min(11, stone.fallVy + .36);
+            stone.y += stone.fallVy;
+            if (stone.y > WORLD_HEIGHT + 70) stone.fallen = true;
+        }
+    });
+
+    if (gameTick % 72 === 0) {
+        hazards.push({
+            kind: 'lava_drop',
+            x: cameraX + 55 + Math.random() * Math.max(80, canvas.width - 110),
+            y: -34,
+            vy: 3.8 + Math.random() * 1.6,
+            width: 24,
+            height: 34,
+            warning: 38
+        });
+    }
+
+    for (let index = hazards.length - 1; index >= 0; index--) {
+        const drop = hazards[index];
+        if (drop.kind !== 'lava_drop') continue;
+        if (drop.warning > 0) {
+            drop.warning--;
+            continue;
+        }
+        drop.y += drop.vy;
+        drop.vy = Math.min(12, drop.vy + .18);
+        if (shouldRunAmbientEffect(3)) {
+            particles.push(new Particle(drop.x + 12, drop.y + 24, (Math.random() - .5) * 1.4, -1.2, '#fb923c', 3, 12, 'fire'));
+        }
+        if (player.invulnerable <= 0 && checkCollision(player, drop)) {
+            hazards.splice(index, 1);
+            player.invulnerable = shopUpgrades.shieldActive ? 130 : 65;
+            triggerShake(16, 6);
+            handlePlayerDeath();
+            return;
+        }
+        if (drop.y > WORLD_HEIGHT + 30) hazards.splice(index, 1);
+    }
+}
+
+function updateUnderwaterWhirlpools() {
+    if (currentLevel !== 4 || levelFourSection !== 2) return;
+    if (whirlpoolLaunchCooldown > 0) whirlpoolLaunchCooldown--;
+
+    if (whirlpoolTransit) {
+        const source = underwaterWhirlpools[whirlpoolTransit.sourceIndex];
+        player.x = source.x - player.width / 2;
+        player.y = source.y - player.height / 2;
+        player.vx = 0;
+        player.vy = 0;
+        whirlpoolTransit.timer--;
+        if (whirlpoolTransit.timer <= 0) {
+            const exit = underwaterWhirlpools[whirlpoolTransit.exitIndex];
+            player.x = exit.x - player.width / 2;
+            player.y = exit.y - player.height / 2;
+            player.vx = exit.direction * 8.8;
+            player.vy = -3.8;
+            player.grounded = false;
+            whirlpoolLaunchCooldown = 120;
+            whirlpoolTransit = null;
+            triggerShake(18, 6);
+            playSound('jump');
+            for (let i = 0; i < 22; i++) {
+                particles.push(new Particle(exit.x, exit.y, (Math.random() - .5) * 6, (Math.random() - .5) * 6, '', 5, 30, 'bubble'));
+            }
+        }
+        return;
+    }
+
+    const playerCenterX = player.x + player.width / 2;
+    const playerCenterY = player.y + player.height / 2;
+    underwaterWhirlpools.forEach((whirlpool, index) => {
+        if (ridingMantaRay) return;
+        const dx = whirlpool.x - playerCenterX;
+        const dy = whirlpool.y - playerCenterY;
+        const distance = Math.hypot(dx, dy);
+        if (distance >= whirlpool.radius || distance < 1) return;
+
+        const strength = 1 - distance / whirlpool.radius;
+        const nx = dx / distance;
+        const ny = dy / distance;
+        player.vx += nx * (.10 + strength * .24) + (-ny * whirlpool.direction) * strength * .16;
+        player.vy += ny * (.08 + strength * .20) + (nx * whirlpool.direction) * strength * .13;
+
+        if (distance < 30 && whirlpoolLaunchCooldown <= 0) {
+            whirlpoolTransit = { sourceIndex: index, exitIndex: whirlpool.exitIndex, timer: 34 };
+            ridingMantaRay = null;
+            triggerShake(14, 5);
+            playSound('powerup');
+            for (let i = 0; i < 16; i++) {
+                particles.push(new Particle(playerCenterX, playerCenterY, (Math.random() - .5) * 5, (Math.random() - .5) * 5, '', 5, 28, 'bubble'));
+            }
+        }
+    });
+
+    mantaRays.forEach(ray => {
+        if (ridingMantaRay === ray) {
+            ridingMantaTicks++;
+            const horizontal = (keys['ArrowRight'] || keys['d'] || keys['D'] ? 1 : 0) - (keys['ArrowLeft'] || keys['a'] || keys['A'] ? 1 : 0);
+            const vertical = (keys['ArrowDown'] || keys['s'] || keys['S'] ? 1 : 0) - (keys['ArrowUp'] || keys['w'] || keys['W'] || keys[' '] ? 1 : 0);
+            if (horizontal) player.direction = horizontal;
+            ray.vx = approach(ray.vx, horizontal * 7.6, horizontal ? .24 : .10);
+            ray.vy = approach(ray.vy, vertical * 4.5, vertical ? .20 : .12);
+            ray.x = Math.max(0, Math.min(LEVEL_WIDTH - ray.width, ray.x + ray.vx));
+            ray.y = Math.max(75, Math.min(350, ray.y + ray.vy));
+
+            // Miau viaja realmente sobre el centro del lomo, como
+            // sobre una patineta, en vez de quedar flotando al lado.
+            player.x = ray.x + ray.width * .5 - player.width * .5;
+            player.y = ray.y - player.height - 8;
+            player.vx = ray.vx;
+            player.vy = 0;
+            return;
+        }
+
+        ray.x += ray.vx;
+        if (ray.x <= ray.minX || ray.x + ray.width >= ray.maxX) {
+            ray.x = Math.max(ray.minX, Math.min(ray.maxX - ray.width, ray.x));
+            ray.vx *= -1;
+        }
+        ray.vy = 0;
+        ray.y += Math.sin(gameTick * .035 + ray.phase) * .12;
+
+        const playerCenterX = player.x + player.width / 2;
+        const playerBottom = player.y + player.height;
+        const overlapsRay = playerCenterX >= ray.x - 18 && playerCenterX <= ray.x + ray.width + 18;
+        const closeVertically = playerBottom >= ray.y - 48 && player.y <= ray.y + ray.height + 35;
+        const mountPressed = keys['ArrowDown'] || keys['s'] || keys['S'];
+        const landedOnTop = playerBottom >= ray.y - 22 && playerBottom <= ray.y + 24 && player.vy >= -2.5;
+        const distanceToRay = Math.hypot(playerCenterX - (ray.x + ray.width / 2), (player.y + player.height / 2) - ray.y);
+        const requestedNearbyMount = mountPressed && distanceToRay < 165;
+        if (!ridingMantaRay && ((overlapsRay && closeVertically && landedOnTop) || requestedNearbyMount)) {
+            ridingMantaRay = ray;
+            ridingMantaTicks = 0;
+            ray.vx = player.direction >= 0 ? 3.8 : -3.8;
+            ray.vy = 0;
+            player.x = ray.x + ray.width * .5 - player.width * .5;
+            player.y = ray.y - player.height - 8;
+            player.vy = 0;
+            playSound('coin');
+        }
+    });
+}
+
+function shootWaterBubble() {
+    if (currentLevel !== 4 || levelFourSection !== 3 || !octopusBoss || octopusBoss.defeated) return;
+    if (player.shootCooldown > 0) return;
+    player.shootCooldown = 16;
+    player.attackAnimationTimer = 14;
+    playSound('shoot');
+    waterBubbleShots.push({
+        x: player.x + player.width / 2,
+        y: player.y + player.height / 2,
+        width: 18,
+        height: 18,
+        vx: player.direction * 7.2,
+        life: 100
+    });
+}
+
+function resetPlayerInsideOctopusBattle() {
+    player.lives--;
+    syncHudLives();
+    playSound('hurt');
+    triggerShake(24, 8);
+
+    if (player.lives <= 0) {
+        gameActive = false;
+        showOverlay('🐙', '¡FIN DEL JUEGO!', `La tinta del pulpo venció a Super Miau. Volvés al inicio del mundo ${currentLevel}.`, 'Reintentar desde el .1 🔄', restartCurrentWorld);
+        return;
+    }
+
+    octopusBoss.playerHp = octopusBoss.playerMaxHp;
+    octopusInkBlobs = [];
+    player.x = 3650;
+    player.y = 250;
+    player.vx = 0;
+    player.vy = 0;
+    player.oxygen = 100;
+    player.invulnerable = 100;
+    player.hurtAnimationTimer = 24;
+    octopusBoss.attackCooldown = 75;
+}
+
+function updateOctopusBattle() {
+    if (currentLevel !== 4 || levelFourSection !== 3 || !octopusBoss || octopusBoss.defeated) return;
+    if (player.x > 3500) octopusBoss.active = true;
+    if (octopusBoss.hurtTimer > 0) octopusBoss.hurtTimer--;
+
+    waterBubbleShots.forEach(shot => {
+        shot.x += shot.vx;
+        shot.life--;
+    });
+    for (let index = waterBubbleShots.length - 1; index >= 0; index--) {
+        const shot = waterBubbleShots[index];
+        if (octopusBoss.active && octopusBoss.hurtTimer <= 0 && checkCollision(shot, octopusBoss)) {
+            waterBubbleShots.splice(index, 1);
+            octopusBoss.hp--;
+            octopusBoss.hurtTimer = 12;
+            triggerShake(8, 3);
+            playSound('stomp');
+            if (octopusBoss.hp <= 0) {
+                octopusBoss.defeated = true;
+                octopusBoss.active = false;
+                octopusInkBlobs = [];
+                playSound('victory');
+                awardWallet(12);
+            }
+        } else if (shot.life <= 0 || shot.x < 0 || shot.x > LEVEL_WIDTH) {
+            waterBubbleShots.splice(index, 1);
+        }
+    }
+
+    if (!octopusBoss.active) return;
+    octopusBoss.phase += .035;
+    octopusBoss.y = 165 + Math.sin(octopusBoss.phase) * 70;
+    if (octopusBoss.attackCooldown > 0) octopusBoss.attackCooldown--;
+    if (octopusBoss.attackCooldown <= 0) {
+        const originX = octopusBoss.x + octopusBoss.width / 2;
+        const originY = octopusBoss.y + octopusBoss.height / 2;
+        const dx = player.x + player.width / 2 - originX;
+        const dy = player.y + player.height / 2 - originY;
+        const distance = Math.max(1, Math.hypot(dx, dy));
+        const burst = octopusBoss.hp <= 7 ? 3 : 1;
+        for (let i = 0; i < burst; i++) {
+            octopusInkBlobs.push({
+                x: originX, y: originY, width: 24, height: 24,
+                vx: dx / distance * 3.6,
+                vy: dy / distance * 3.6 + (i - (burst - 1) / 2) * .75,
+                life: 240
+            });
+        }
+        octopusBoss.attackCooldown = octopusBoss.hp <= 7 ? 48 : 72;
+        playSound('shoot');
+    }
+
+    for (let index = octopusInkBlobs.length - 1; index >= 0; index--) {
+        const ink = octopusInkBlobs[index];
+        ink.x += ink.vx;
+        ink.y += ink.vy;
+        ink.life--;
+        if (player.invulnerable <= 0 && checkCollision(player, ink)) {
+            octopusInkBlobs.splice(index, 1);
+            player.invulnerable = shopUpgrades.shieldActive ? 120 : 70;
+            const damage = shopUpgrades.shieldActive ? 9 : 14;
+            octopusBoss.playerHp = Math.max(0, octopusBoss.playerHp - damage);
+            player.hurtAnimationTimer = 24;
+            triggerShake(12, 5);
+            playSound('hurt');
+            if (octopusBoss.playerHp <= 0) {
+                resetPlayerInsideOctopusBattle();
+                return;
+            }
+        } else if (ink.life <= 0 || ink.x < 0 || ink.x > LEVEL_WIDTH || ink.y < -50 || ink.y > WORLD_HEIGHT + 50) {
+            octopusInkBlobs.splice(index, 1);
+        }
+    }
 }
 
 function getStreetSignalState(worldX) {
@@ -3517,7 +3664,6 @@ function resetVampireBattle() {
     vampireBattle.playerHurtTimer = 0;
     vampireBattle.introTimer = 0;
     vampireBattle.batAttackCooldown = 0;
-    vampireBattle.batAttackArmed = true;
     vampireBattle.phase = 0;
 }
 
@@ -3545,7 +3691,6 @@ function startVampireBattle() {
     vampireBattle.playerHurtTimer = 70;
     vampireBattle.introTimer = 180;
     vampireBattle.batAttackCooldown = 45;
-    vampireBattle.batAttackArmed = true;
     vampireBattle.phase = 0;
 
     // Si el jugador pasó demasiado lejos del objeto, la puerta evita
@@ -3611,9 +3756,7 @@ function resetPlayerInsideVampireRoom() {
 
     if (player.lives <= 0) {
         gameActive = false;
-        showOverlay('🌙', '¡FIN DEL JUEGO!', 'El vampiro defendió la salida. Volvé a intentarlo y usá el aerosol cuando esté delante de Super Miau.', 'Volver a Intentar 🔄', () => {
-            startGame();
-        });
+        showOverlay('🌙', '¡FIN DEL JUEGO!', `El vampiro defendió la salida. Volvés al inicio del mundo ${currentLevel}.`, 'Reintentar desde el .1 🔄', restartCurrentWorld);
         return;
     }
 
@@ -3628,7 +3771,6 @@ function resetPlayerInsideVampireRoom() {
     vampireBattle.x = VAMPIRE_ARENA.bossStartX;
     vampireBattle.vx = -1.35;
     vampireBattle.batAttackCooldown = 45;
-    vampireBattle.batAttackArmed = true;
 }
 
 // El vampiro reutiliza exactamente el mismo tipo de murciélago de los
@@ -3652,7 +3794,8 @@ function launchVampireBats() {
             life: 520,
             age: 0,
             hit: false,
-            repelledTicks: 0
+            repelledTicks: 0,
+            source: 'vampire'
         });
     });
 
@@ -3716,19 +3859,16 @@ function updateVampireBattle() {
         vampireBattle.vx = -Math.abs(vampireBattle.vx);
     }
 
-    // Al acercarse Miau, el vampiro responde con una bandada. Para
-    // volver a dispararla el jugador debe tomar distancia y entrar
-    // nuevamente en su zona, evitando una lluvia infinita de enemigos.
+    // El vampiro lanza nuevas bandadas mientras Miau permanece a su
+    // alcance. El enfriamiento evita que los ataques se amontonen y se
+    // acorta gradualmente cuando al jefe le queda menos vida.
     const playerCenterX = player.x + player.width / 2;
     const vampireCenterX = vampireBattle.x + vampireBattle.width / 2;
     const batAttackDistance = Math.abs(playerCenterX - vampireCenterX);
-    if (batAttackDistance > 470 && vampireBattle.batAttackCooldown <= 0) {
-        vampireBattle.batAttackArmed = true;
-    }
-    if (batAttackDistance < 345 && vampireBattle.batAttackArmed && vampireBattle.batAttackCooldown <= 0) {
+    const activeVampireBats = bats.reduce((count, bat) => count + (bat.source === 'vampire' && !bat.hit ? 1 : 0), 0);
+    if (batAttackDistance < 420 && activeVampireBats < 8 && vampireBattle.batAttackCooldown <= 0) {
         launchVampireBats();
-        vampireBattle.batAttackArmed = false;
-        vampireBattle.batAttackCooldown = 100;
+        vampireBattle.batAttackCooldown = Math.round(155 - missingHpRatio * 35);
     }
 
     if (vampireBattle.playerHurtTimer <= 0 && checkCollision(player, vampireBattle)) {
@@ -3872,6 +4012,211 @@ function shootLightning() {
 }
 
 // Ejecuta un paso de simulacion: movimiento, colisiones, enemigos, jefe y progreso del nivel.
+function rescueDragon() {
+    if (!dragonBoss || dragonBoss.rescued) return;
+    dragonBoss.rescued = true;
+    dragonBoss.unlockTimer = 90;
+    dragonBoss.celebrationTimer = 210;
+    player.celebrateAnimationTimer = 120;
+    triggerShake(18, 5);
+    playSound('victory');
+    for (let i = 0; i < 30; i++) particles.push(new Particle(dragonBoss.x + dragonBoss.width / 2, dragonBoss.y + 30, (Math.random() - .5) * 7, -Math.random() * 5, i % 2 ? '#fde047' : '#fb923c', 3, 32, 'spark'));
+}
+
+function shootDragonFire() {
+    const ridingDragon = ((currentLevel === 5 && levelFiveSection === 3) || (currentLevel === 6 && levelSixSection === 1)) && !!dragonBoss?.mounted;
+    if (!ridingDragon || player.shootCooldown > 0) return;
+
+    const direction = player.direction >= 0 ? 1 : -1;
+    player.shootCooldown = 24;
+    player.attackAnimationTimer = 18;
+    playSound('shoot');
+    playerProjectiles.push({
+        x: player.x + player.width / 2 + direction * 70 - 16,
+        y: player.y + player.height / 2 + 20,
+        width: 34,
+        height: 22,
+        vx: direction * 9,
+        rotation: 0,
+        life: 75,
+        kind: 'dragon_fire'
+    });
+    for (let i = 0; i < 14; i++) {
+        particles.push(new Particle(
+            player.x + player.width / 2 + direction * 65,
+            player.y + player.height / 2 + 28,
+            direction * (2.5 + Math.random() * 4),
+            (Math.random() - .5) * 3,
+            i % 2 ? '#f97316' : '#fde047',
+            2 + Math.random() * 3,
+            18 + Math.floor(Math.random() * 12),
+            'fire'
+        ));
+    }
+}
+
+function startFamilyRescueSequence() {
+    if (familyRescueSequence.active || familyRescueSequence.completed) return;
+    princess.jailed = false;
+    familyRescueSequence = {
+        active: true,
+        phase: 'family_dialog',
+        timer: 75,
+        x: princess.x,
+        y: 258,
+        alpha: 1,
+        completed: false
+    };
+    bones = [];
+    playerProjectiles = [];
+    // Corte inmediato al reencuentro: evita dejar los controles bloqueados
+    // mientras Miau atraviesa automáticamente toda la arena vacía.
+    player.x = familyRescueSequence.x - 112;
+    player.y = 330;
+    player.vx = 0;
+    player.vy = 0;
+    player.direction = 1;
+    player.isMoving = false;
+    player.celebrateAnimationTimer = 75;
+    player.invulnerable = 9999;
+    playSound('victory');
+    playSound('coin');
+}
+
+function updateFamilyRescueSequence() {
+    if (!familyRescueSequence.active) return;
+    player.vx = 0;
+    player.vy = 0;
+
+    if (familyRescueSequence.phase === 'approach') {
+        const reunionX = familyRescueSequence.x - 112;
+        player.x = approach(player.x, reunionX, 3.1);
+        player.y = approach(player.y, 330, 3);
+        player.direction = 1;
+        player.isMoving = Math.abs(player.x - reunionX) > 2;
+        if (Math.abs(player.x - reunionX) <= 2 && Math.abs(player.y - 330) <= 2) {
+            familyRescueSequence.phase = 'family_dialog';
+            familyRescueSequence.timer = 120;
+            player.isMoving = false;
+            player.celebrateAnimationTimer = 120;
+            playSound('coin');
+        }
+    } else if (familyRescueSequence.phase === 'family_dialog') {
+        familyRescueSequence.timer--;
+        if (familyRescueSequence.timer <= 0) {
+            familyRescueSequence.phase = 'miau_dialog';
+            familyRescueSequence.timer = 75;
+            player.celebrateAnimationTimer = 75;
+        }
+    } else if (familyRescueSequence.phase === 'miau_dialog') {
+        familyRescueSequence.timer--;
+        if (familyRescueSequence.timer <= 0) {
+            familyRescueSequence.phase = 'walking';
+            player.celebrateAnimationTimer = 0;
+            player.direction = 1;
+        }
+    } else if (familyRescueSequence.phase === 'walking') {
+        familyRescueSequence.x += 2.5;
+        player.x = approach(player.x, familyRescueSequence.x - 62, 2.25);
+        player.y = approach(player.y, 330, 3);
+        player.isMoving = true;
+        if (familyRescueSequence.x >= flagpole.x - 34) {
+            familyRescueSequence.phase = 'portal';
+            familyRescueSequence.timer = 70;
+            playSound('portalBurst');
+        }
+    } else if (familyRescueSequence.phase === 'portal') {
+        familyRescueSequence.timer--;
+        familyRescueSequence.alpha = Math.max(0, familyRescueSequence.timer / 70);
+        player.x = approach(player.x, flagpole.x + 8, 2.4);
+        if (familyRescueSequence.timer <= 0 && !familyRescueSequence.completed) {
+            familyRescueSequence.completed = true;
+            familyRescueSequence.active = false;
+            gameActive = false;
+            showOverlay('💥🌀', '¡FIRULAIS DERROTADO!', 'La familia está a salvo y todos cruzaron juntos el portal. La fortaleza comenzó a quebrarse: queda encontrar el camino de regreso.', 'Entrar a la Dimensión Quebrada 🐾', () => transitionNext());
+        }
+    }
+}
+
+function openDragonPuzzle() {
+    if (dragonLockPuzzle.active || dragonLockPuzzle.solved) return;
+    dragonLockPuzzle.active = true;
+    dragonLockPuzzle.riddle = DRAGON_LOCK_RIDDLES[Math.floor(Math.random() * DRAGON_LOCK_RIDDLES.length)];
+    resetInputState();
+    isPaused = true;
+    ui.dragonPuzzleQuestion.textContent = dragonLockPuzzle.riddle.question;
+    ui.dragonPuzzleAnswer.value = '';
+    ui.dragonPuzzleFeedback.textContent = 'Usá la llave y resolvé el acertijo.';
+    ui.dragonPuzzleFeedback.className = 'mt-3 min-h-6 text-sm font-bold text-indigo-200';
+    ui.dragonPuzzleOverlay.classList.remove('hidden');
+    ui.dragonPuzzleOverlay.classList.add('flex');
+    window.setTimeout(() => ui.dragonPuzzleAnswer.focus(), 0);
+}
+
+function submitDragonPuzzle(event) {
+    event.preventDefault();
+    if (!dragonLockPuzzle.active || !dragonLockPuzzle.riddle) return;
+    const attempt = ui.dragonPuzzleAnswer.value.replace(/\D/g, '');
+    ui.dragonPuzzleAnswer.value = attempt;
+    if (attempt !== dragonLockPuzzle.riddle.answer) {
+        ui.dragonPuzzleFeedback.textContent = attempt.length !== 4
+            ? 'La cerradura necesita exactamente 4 números.'
+            : 'Esa combinación no abre la jaula. ¡Revisá la cuenta!';
+        ui.dragonPuzzleFeedback.className = 'mt-3 min-h-6 text-sm font-bold text-rose-300';
+        playSound('hurt');
+        ui.dragonPuzzleAnswer.select();
+        return;
+    }
+
+    dragonLockPuzzle.active = false;
+    dragonLockPuzzle.solved = true;
+    ui.dragonPuzzleOverlay.classList.add('hidden');
+    ui.dragonPuzzleOverlay.classList.remove('flex');
+    isPaused = false;
+    lastTime = performance.now();
+    physicsAccumulator = 0;
+    rescueDragon();
+}
+
+function updateDragonBattle() {
+    if (currentLevel !== 5 || levelFiveSection !== 3 || !dragonBoss) return;
+    if (!dragonBoss.rescued && dragonKey && dragonKey.collected) {
+        const cageDoor = { x: dragonBoss.x - 28, y: dragonBoss.y, width: dragonBoss.width + 56, height: dragonBoss.height };
+        if (checkCollision(player, cageDoor)) openDragonPuzzle();
+    }
+    if (dragonBoss.rescued && !dragonBoss.mounted) {
+        const saddleY = dragonBoss.y + 60;
+        const overlapsBack = player.x + player.width > dragonBoss.x + 18
+            && player.x < dragonBoss.x + dragonBoss.width - 18;
+        const landsOnBack = player.vy >= 0
+            && player.y + player.height >= saddleY - 10
+            && player.y + player.height <= saddleY + 24;
+        if (overlapsBack && landsOnBack) {
+            dragonBoss.mounted = true;
+            dragonBoss.celebrationTimer = 0;
+            player.vy = 0;
+            player.grounded = true;
+            player.celebrateAnimationTimer = 45;
+            ui.btnDown.classList.remove('hidden');
+            ui.btnDown.textContent = '⬇️';
+            ui.btnDown.setAttribute('aria-label', 'Volar hacia abajo');
+            updatePowerBadge();
+            playSound('lifeup');
+            for (let i = 0; i < 18; i++) particles.push(new Particle(player.x + player.width / 2, saddleY, (Math.random() - .5) * 5, -Math.random() * 3, '#fde047', 3, 25, 'spark'));
+        }
+    }
+    if (dragonBoss.unlockTimer > 0) dragonBoss.unlockTimer--;
+    if (dragonBoss.celebrationTimer > 0) dragonBoss.celebrationTimer--;
+    if (!dragonBoss.mounted) dragonBoss.facing = player.x < dragonBoss.x ? -1 : 1;
+}
+
+function syncMountedDragon() {
+    if (!dragonBoss || !dragonBoss.mounted) return;
+    dragonBoss.facing = player.direction || 1;
+    dragonBoss.x = player.x + player.width / 2 - dragonBoss.width / 2;
+    dragonBoss.y = player.y + player.height / 2 - dragonBoss.height * .32;
+}
+
 function updateGame() {
     gameTick++;
 
@@ -3898,6 +4243,7 @@ function updateGame() {
     if (player.hurtAnimationTimer > 0) player.hurtAnimationTimer--;
     if (player.landingAnimationTimer > 0) player.landingAnimationTimer--;
     if (player.celebrateAnimationTimer > 0) player.celebrateAnimationTimer--;
+    updateDragonBattle();
     if (player.ringDetachCooldown > 0) player.ringDetachCooldown--;
     if (player.batSprayCooldown > 0) player.batSprayCooldown--;
     if (player.batSprayFlashTimer > 0) player.batSprayFlashTimer--;
@@ -3936,8 +4282,8 @@ function updateGame() {
         }
     }
 
-    // Efecto de brasas de lava flotantes en las montañas volcánicas (Nivel 4)
-    if (currentLevel === 4 && shouldRunAmbientEffect(6)) {
+    // Efecto de brasas de lava flotantes en las montañas volcánicas (Nivel 5)
+    if (currentLevel === 5 && shouldRunAmbientEffect(6)) {
         particles.push(new Particle(
             cameraX + Math.random() * canvas.width,
             380,
@@ -3959,14 +4305,18 @@ function updateGame() {
             ui.levelTimerText.textContent = Math.ceil(levelTimer / 60);
         }
 
-        // Generar caída de meteoros/escombros por el colapso
+        // Pedazos del propio cielo se desprenden mientras la dimensión colapsa.
         if (gameTick % 45 === 0) {
+            const shardWidth = 18 + Math.random() * 16;
             hazards.push({
                 x: cameraX + Math.random() * canvas.width,
                 y: -20,
                 vy: 3.2 + Math.random() * 2.8,
-                width: 20,
-                height: 20
+                width: shardWidth,
+                height: 16 + Math.random() * 14,
+                rotation: Math.random() * Math.PI * 2,
+                spin: (Math.random() - 0.5) * 0.16,
+                kind: 'sky_shard'
             });
         }
 
@@ -3980,9 +4330,10 @@ function updateGame() {
         for (let hIdx = hazards.length - 1; hIdx >= 0; hIdx--) {
             const h = hazards[hIdx];
             h.y += h.vy;
+            if (h.kind === 'sky_shard') h.rotation += h.spin;
             
             if (shouldRunAmbientEffect(6)) {
-                particles.push(new Particle(h.x + 10, h.y + 10, (Math.random() - 0.5) * 1.5, -1, '#ef4444', 3, 10, 'fire'));
+                particles.push(new Particle(h.x + h.width / 2, h.y + h.height / 2, (Math.random() - 0.5) * 1.2, -0.6, '#bae6fd', 2, 12, 'spark'));
             }
 
             if (checkCollision(player, h)) {
@@ -4042,17 +4393,23 @@ function updateGame() {
     }
 
     updateLevelThreeMechanics();
+    updateLevelFiveMechanics();
+    updateUnderwaterWhirlpools();
+    updateOctopusBattle();
+    updateFamilyRescueSequence();
 
-    const isWater = (currentLevel === 5); // Nivel 5 es el Fondo del Mar
-    const isControlLocked = player.zombieStunTimer > 0 || player.webStunTimer > 0 || player.hiddenInHole;
+    const isWater = (currentLevel === 4); // Nivel 4 es la Ciudad Sumergida
+    const isMountedFlight = ((currentLevel === 5 && levelFiveSection === 3) || (currentLevel === 6 && levelSixSection === 1)) && !!dragonBoss?.mounted;
+    const isFamilySequence = familyRescueSequence.active;
+    const isControlLocked = player.zombieStunTimer > 0 || player.webStunTimer > 0 || player.hiddenInHole || !!whirlpoolTransit || !!ridingMantaRay || isFamilySequence;
     const leftPressed = !isControlLocked && (keys['ArrowLeft'] || keys['a'] || keys['A']);
     const rightPressed = !isControlLocked && (keys['ArrowRight'] || keys['d'] || keys['D']);
     const upPressed = !isControlLocked && (keys['ArrowUp'] || keys['w'] || keys['W'] || keys[' ']);
-    const canUseDownAction = isWater || (currentLevel === 3 && levelThreeSection === 2);
+    const canUseDownAction = isWater || isMountedFlight || (currentLevel === 3 && levelThreeSection === 2);
     const downPressed = !isControlLocked && (keys['ArrowDown'] || (canUseDownAction && (keys['s'] || keys['S'])));
     const horizontalInput = (rightPressed ? 1 : 0) - (leftPressed ? 1 : 0);
     const isHanging = updateActiveRingHang(horizontalInput, upPressed);
-    player.isMoving = isHanging ? Math.abs(horizontalInput) > 0 : horizontalInput !== 0 || (isWater && (upPressed || downPressed));
+    player.isMoving = isHanging ? Math.abs(horizontalInput) > 0 : horizontalInput !== 0 || ((isWater || isMountedFlight) && (upPressed || downPressed));
 
     if (player.grounded && horizontalInput !== 0) {
         if (gameTick % 10 === 0) {
@@ -4060,7 +4417,25 @@ function updateGame() {
         }
     }
 
-    if (isHanging) {
+    if (isFamilySequence) {
+        player.vx = 0;
+        player.vy = 0;
+        player.coyoteFrames = 0;
+        player.jumpBufferFrames = 0;
+        player.jumpHoldFrames = 0;
+    } else if (isHanging) {
+        player.coyoteFrames = 0;
+        player.jumpBufferFrames = 0;
+        player.jumpHoldFrames = 0;
+    } else if (isMountedFlight) {
+        const verticalInput = (downPressed ? 1 : 0) - (upPressed ? 1 : 0);
+        const flightSpeed = 5.2;
+        const flightAcceleration = .42;
+        const flightDeceleration = .32;
+        player.vx = approach(player.vx, horizontalInput * flightSpeed, horizontalInput ? flightAcceleration : flightDeceleration);
+        player.vy = approach(player.vy, verticalInput * flightSpeed, verticalInput ? flightAcceleration : flightDeceleration);
+        if (horizontalInput !== 0) player.direction = horizontalInput;
+        player.grounded = false;
         player.coyoteFrames = 0;
         player.jumpBufferFrames = 0;
         player.jumpHoldFrames = 0;
@@ -4160,8 +4535,9 @@ function updateGame() {
     const previousBottom = player.y + player.height;
     player.x += player.vx;
     if (player.x < 0) player.x = 0;
+    if (isMountedFlight && player.x > LEVEL_WIDTH - player.width) player.x = LEVEL_WIDTH - player.width;
 
-    for (let i = 0; i < blocks.length; i++) {
+    for (let i = 0; !isMountedFlight && i < blocks.length; i++) {
         const block = blocks[i];
         if (isPlaygroundNonSolid(block)) continue;
         if (checkCollision(player, block)) {
@@ -4179,7 +4555,7 @@ function updateGame() {
     player.wasGrounded = player.grounded;
     player.grounded = false;
 
-    for (let i = 0; i < blocks.length; i++) {
+    for (let i = 0; !isMountedFlight && i < blocks.length; i++) {
         const block = blocks[i];
         if (isPlaygroundNonSolid(block)) continue;
         if (checkCollision(player, block)) {
@@ -4190,6 +4566,9 @@ function updateGame() {
 
                 if (currentLevel === 3 && levelThreeSection === 3 && block.type === 'bridge_plank' && !block.falling) {
                     armBridgeCascade(block);
+                }
+                if (currentLevel === 5 && levelFiveSection === 2 && block.type === 'lava_stone' && !block.falling && block.fallTimer < 0) {
+                    block.fallTimer = 42;
                 }
 
                 if (!player.wasGrounded) {
@@ -4216,29 +4595,37 @@ function updateGame() {
                         break;
                     } else if (block.type === 'question') {
                         block.hasBeenHit = true;
-                        
-                        const rng = Math.random();
-                        let dropType = 'coin';
-                        if (rng < 0.40) {
-                            dropType = 'coin'; 
-                        } else if (rng < 0.60) {
-                            dropType = 'extra_life'; 
-                        } else if (rng < 0.80) {
-                            dropType = 'lightning'; 
-                        } else {
-                            dropType = 'strength'; 
-                        }
 
-                        poppedPowerups.push({
-                            x: block.x + 6,
-                            y: block.y - 16,
-                            width: 20,
-                            height: 20,
-                            vx: (Math.random() - 0.5) * 3, 
-                            vy: -6,                       
-                            type: dropType,
-                            grounded: false
-                        });
+                        if (currentLevel === 5 && levelFiveSection === 3 && block.hasDragonKey && dragonKey && !dragonKey.collected) {
+                            dragonKey.collected = true;
+                            playSound('lifeup');
+                            for (let sparkle = 0; sparkle < 20; sparkle++) {
+                                particles.push(new Particle(block.x + 16, block.y - 12, (Math.random() - .5) * 5, -Math.random() * 5, '#fde047', 3, 30, 'spark'));
+                            }
+                        } else {
+                            const rng = Math.random();
+                            let dropType = 'coin';
+                            if (rng < 0.40) {
+                                dropType = 'coin';
+                            } else if (rng < 0.60) {
+                                dropType = 'extra_life';
+                            } else if (rng < 0.80) {
+                                dropType = 'lightning';
+                            } else {
+                                dropType = 'strength';
+                            }
+
+                            poppedPowerups.push({
+                                x: block.x + 6,
+                                y: block.y - 16,
+                                width: 20,
+                                height: 20,
+                                vx: (Math.random() - 0.5) * 3,
+                                vy: -6,
+                                type: dropType,
+                                grounded: false
+                            });
+                        }
                         
                         playSound('coin');
                         for (let i = 0; i < 6; i++) {
@@ -4248,6 +4635,11 @@ function updateGame() {
                 }
             }
         }
+    }
+
+    if (isMountedFlight) {
+        player.y = Math.max(24, Math.min(WORLD_HEIGHT - player.height - 28, player.y));
+        player.grounded = false;
     }
 
     if (!isHanging) {
@@ -4346,7 +4738,8 @@ function updateGame() {
         let projectileRemoved = false;
 
         if (gameTick % 3 === 0) {
-            particles.push(new Particle(proj.x + proj.width/2, proj.y + proj.height/2, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2, '#facc15', 2, 10, 'electricity'));
+            const fireProjectile = proj.kind === 'dragon_fire';
+            particles.push(new Particle(proj.x + proj.width/2, proj.y + proj.height/2, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2, fireProjectile ? '#f97316' : '#facc15', fireProjectile ? 3 : 2, 10, fireProjectile ? 'fire' : 'electricity'));
         }
 
         for (let enemyIdx = 0; enemyIdx < enemies.length; enemyIdx++) {
@@ -4368,7 +4761,7 @@ function updateGame() {
         if (projectileRemoved) continue;
 
         // Colisión del maullido con Firulais (Nivel 6)
-        if (currentLevel === 6 && boss.active && boss.hp > 0 && checkCollision(proj, boss)) {
+        if (currentLevel === 6 && levelSixSection === 2 && boss.active && boss.hp > 0 && checkCollision(proj, boss)) {
             playerProjectiles.splice(pIdx, 1);
             projectileRemoved = true;
             if (boss.hurtTimer <= 0) {
@@ -4376,15 +4769,15 @@ function updateGame() {
                 triggerShake(20, 8);
                 boss.hp--;
                 boss.hurtTimer = 60;
-                boss.vx = (boss.vx > 0 ? 1 : -1) * (2.2 + (3 - boss.hp) * 1.0);
+                const damageRatio = 1 - boss.hp / boss.maxHp;
+                boss.vx = (boss.vx > 0 ? 1 : -1) * (2.2 + damageRatio * 2.1);
                 
                 for (let i = 0; i < 15; i++) {
                     particles.push(new Particle(boss.x + boss.width/2, boss.y + boss.height/2, (Math.random() - 0.5) * 7, (Math.random() - 0.5) * 7, '#facc15', 3, 25, 'electricity'));
                 }
 
                 if (boss.hp <= 0) {
-                    princess.jailed = false;
-                    playSound('victory');
+                    startFamilyRescueSequence();
                 }
             }
         }
@@ -4396,7 +4789,7 @@ function updateGame() {
         }
     }
 
-    // Lógica de Oxígeno (Nivel 5 Acuático)
+    // Lógica de Oxígeno (Nivel 4 Acuático)
     if (isWater) {
         if (player.y < 70) {
             player.oxygen = Math.min(100, player.oxygen + 1.8);
@@ -4432,6 +4825,12 @@ function updateGame() {
                 b.respawnAt = gameTick + AIR_BUBBLE_RESPAWN_TICKS;
                 playSound('coin');
                 player.oxygen = Math.min(100, player.oxygen + 45);
+                if (levelFourSection === 3 && octopusBoss && !octopusBoss.defeated) {
+                    octopusBoss.playerHp = Math.min(
+                        octopusBoss.playerMaxHp,
+                        octopusBoss.playerHp + 25
+                    );
+                }
                 for (let i = 0; i < 10; i++) {
                     particles.push(new Particle(b.x + 17, b.y + 17, (Math.random() - 0.5) * 3, (Math.random() - 0.5) * 3, '', 6, 20, 'bubble'));
                 }
@@ -4453,6 +4852,12 @@ function updateGame() {
         }
     }
 
+    const dragonWorldEnemiesOnScreen = currentLevel === 6 && levelSixSection === 1
+        ? enemies.filter(enemy => enemy.alive && enemy.type === 'dog_minion' && enemy.activated && enemy.x - cameraX > -80 && enemy.x - cameraX < canvas.width + 60)
+            .sort((a, b) => Math.abs(a.x - player.x) - Math.abs(b.x - player.x))
+            .slice(0, 2)
+        : [];
+
     enemies.forEach(enemy => {
         if (!enemy.alive) {
             if (enemy.squishTime > 0) enemy.squishTime--;
@@ -4460,7 +4865,42 @@ function updateGame() {
         }
         if (enemy.hurtTimer > 0) enemy.hurtTimer--;
 
-        if (enemy.type === 'jellyfish') {
+        if (enemy.type === 'dog_minion') {
+            const distanceAhead = enemy.x - player.x;
+            if (!enemy.activated) {
+                if (distanceAhead > 760 || distanceAhead < -180) return;
+                enemy.activated = true;
+                enemy.abilityCooldown = 85 + enemy.spriteIndex * 13;
+            }
+            enemy.x += enemy.vx;
+            if (enemy.x <= enemy.minX) {
+                enemy.x = enemy.minX;
+                enemy.vx = Math.abs(enemy.baseSpeed);
+            } else if (enemy.x >= enemy.maxX - enemy.width) {
+                enemy.x = enemy.maxX - enemy.width;
+                enemy.vx = -Math.abs(enemy.baseSpeed);
+            }
+            enemy.y = enemy.baseY + Math.sin(gameTick * (.035 + enemy.spriteIndex * .004) + enemy.phase) * (14 + enemy.spriteIndex * 2);
+            const distanceX = Math.abs(player.x - enemy.x);
+            const canUsePower = dragonWorldEnemiesOnScreen.includes(enemy) && dragonEnemyProjectiles.length < 5;
+            if (canUsePower) enemy.abilityCooldown--;
+            else enemy.abilityCooldown = Math.max(enemy.abilityCooldown, 45);
+            if (canUsePower && enemy.abilityCooldown <= 0 && distanceX < 520) {
+                const originX = enemy.x + enemy.width / 2;
+                const originY = enemy.y + enemy.height / 2;
+                const dx = player.x + player.width / 2 - originX;
+                const dy = player.y + player.height / 2 - originY;
+                const distance = Math.max(1, Math.hypot(dx, dy));
+                const speed = 2.75 + enemy.spriteIndex * .18;
+                dragonEnemyProjectiles.push({
+                    x: originX - 8, y: originY - 8, width: 16, height: 16,
+                    vx: dx / distance * speed, vy: dy / distance * speed,
+                    life: 145, kind: enemy.spriteIndex
+                });
+                enemy.abilityCooldown = Math.max(105, 172 - enemy.spriteIndex * 8);
+                playSound('hurt');
+            }
+        } else if (enemy.type === 'jellyfish') {
             if (enemy.variant === 'drifter') {
                 enemy.x += enemy.vx;
                 if (enemy.x <= enemy.minX) {
@@ -4650,6 +5090,30 @@ function updateGame() {
         }
     });
 
+    for (let index = dragonEnemyProjectiles.length - 1; index >= 0; index--) {
+        const power = dragonEnemyProjectiles[index];
+        power.x += power.vx;
+        power.y += power.vy;
+        power.life--;
+        if (gameTick % 4 === 0) {
+            const colors = ['#f97316', '#a855f7', '#ef4444', '#22d3ee', '#facc15'];
+            particles.push(new Particle(power.x + 8, power.y + 8, 0, 0, colors[power.kind - 1], 2.5, 12, 'spark'));
+        }
+        if (checkCollision(player, power)) {
+            dragonEnemyProjectiles.splice(index, 1);
+            if (player.invulnerable <= 0) {
+                player.invulnerable = shopUpgrades.shieldActive ? 130 : 65;
+                player.hurtAnimationTimer = 20;
+                triggerShake(16, 6);
+                handlePlayerDeath();
+            }
+            continue;
+        }
+        if (power.life <= 0 || power.x < -50 || power.x > LEVEL_WIDTH + 50 || power.y < -60 || power.y > WORLD_HEIGHT + 60) {
+            dragonEnemyProjectiles.splice(index, 1);
+        }
+    }
+
     updateForestChestsAndBats();
     updateStreetChase();
     updateVampireBattle();
@@ -4658,14 +5122,14 @@ function updateGame() {
     const bossZone = currentBlueprint.bossZone;
 
     // Activar al jefe Firulais solo al aproximarse a la sala final del castillo.
-    if (currentLevel === 6 && bossZone && !boss.active && player.x > bossZone.triggerX) {
+    if (currentLevel === 6 && levelSixSection === 2 && bossZone && !boss.active && player.x > bossZone.triggerX) {
         boss.active = true;
         boss.shootTimer = -30; 
         triggerShake(30, 8); // Sacudida épica
     }
 
     // Lógica Final de Firulais (Nivel 6)
-    if (currentLevel === 6 && bossZone && boss.active) {
+    if (currentLevel === 6 && levelSixSection === 2 && bossZone && boss.active) {
         boss.x += boss.vx;
         if (boss.x <= bossZone.minX) {
             boss.x = bossZone.minX;
@@ -4676,11 +5140,35 @@ function updateGame() {
         }
 
         if (boss.hurtTimer > 0) boss.hurtTimer--;
+        if (boss.attackTimer > 0) boss.attackTimer--;
+
+        if (boss.grounded) {
+            boss.jumpCooldown--;
+            if (boss.jumpCooldown <= 0 && boss.hp > 0 && boss.hurtTimer <= 0 && Math.abs(player.x - boss.x) < 520) {
+                boss.vy = -9.2;
+                boss.grounded = false;
+                const remainingBar = Math.max(1, Math.ceil(boss.hp / FIRULAIS_HP_PER_BAR));
+                boss.jumpCooldown = 125 + remainingBar * 18;
+                playSound('jump');
+            }
+        } else {
+            boss.y += boss.vy;
+            boss.vy += .48;
+            if (boss.y >= boss.groundY) {
+                boss.y = boss.groundY;
+                boss.vy = 0;
+                boss.grounded = true;
+                triggerShake(12, 4);
+            }
+        }
 
         boss.shootTimer++;
-        const bossAttackInterval = boss.hp === 3 ? 118 : boss.hp === 2 ? 102 : 88;
-        if (boss.shootTimer >= bossAttackInterval && boss.hp > 0) {
+        const remainingBar = Math.max(1, Math.ceil(boss.hp / FIRULAIS_HP_PER_BAR));
+        const bossAttackInterval = remainingBar === 3 ? 155 : remainingBar === 2 ? 140 : 125;
+        if (boss.shootTimer >= bossAttackInterval && boss.hp > 0 && bones.length < FIRULAIS_MAX_ACTIVE_BONES) {
             boss.shootTimer = 0;
+            boss.attackTimer = 28;
+            boss.attackFacing = player.x + player.width / 2 >= boss.x + boss.width / 2 ? 1 : -1;
             playSound('hurt'); 
             bones.push({
                 x: boss.x + boss.width / 2,
@@ -4693,7 +5181,7 @@ function updateGame() {
             });
         }
 
-        if (boss.hp < 3 && shouldRunAmbientEffect(15)) {
+        if (boss.hp < boss.maxHp && shouldRunAmbientEffect(15)) {
             particles.push(new Particle(boss.x + boss.width / 2 + (Math.random() - 0.5) * 30, boss.y + 10, (Math.random() - 0.5) * 1, -1, '', 6, 25, 'smoke'));
         }
 
@@ -4719,7 +5207,7 @@ function updateGame() {
                 }
             }
 
-            if (bone.bounceCount > 3 || bone.x < 0 || bone.x > LEVEL_WIDTH) {
+            if (bone.bounceCount > 2 || bone.x < 0 || bone.x > LEVEL_WIDTH) {
                 bones.splice(idx, 1);
             }
         }
@@ -4734,8 +5222,7 @@ function updateGame() {
                     player.vx = player.direction * -6; 
                     
                     if (boss.hp <= 0) {
-                        princess.jailed = false; 
-                        playSound('victory');
+                        startFamilyRescueSequence();
                     }
                 }
             } else if (player.vy > 0 && player.y + player.height - player.vy <= boss.y + 15 && boss.hurtTimer <= 0) {
@@ -4745,11 +5232,11 @@ function updateGame() {
                 boss.hurtTimer = 60; 
                 player.vy = -8.5; 
                 
-                boss.vx = (boss.vx > 0 ? 1 : -1) * (2.2 + (3 - boss.hp) * 1.0);
+                const damageRatio = 1 - boss.hp / boss.maxHp;
+                boss.vx = (boss.vx > 0 ? 1 : -1) * (2.2 + damageRatio * 2.1);
 
                 if (boss.hp <= 0) {
-                    princess.jailed = false; 
-                    playSound('victory');
+                    startFamilyRescueSequence();
                 }
             } else if (player.invulnerable <= 0 && boss.hurtTimer <= 0) {
                 player.invulnerable = shopUpgrades.shieldActive ? 130 : 65;
@@ -4758,21 +5245,16 @@ function updateGame() {
         }
     }
 
-    // Colisión con la familia rescatada en el Castillo (Nivel 6)
-    if (currentLevel === 6 && !princess.jailed && checkCollision(player, princess)) {
-        player.celebrateAnimationTimer = 120;
-        gameActive = false;
-        playSound('victory');
-        showOverlay('💥🌀', '¡FIRULAIS DERROTADO!', '¡La jaula se abrió! La fortaleza comenzó a quebrarse y todas las dimensiones se mezclaron. Seguí las huellas de tu familia hasta el portal de regreso.', 'Entrar a la Dimensión Quebrada 🐾', () => {
-            transitionNext();
-        });
-    }
+    syncMountedDragon();
 
     // En 2.3 la meta queda bloqueada hasta completar la habitación
     // extra. La misma zona pasa a ser la puerta de salida al vencer.
     const vampireExitLocked = isVampireBattleSection() && !vampireBattle.defeated;
+    const octopusExitLocked = currentLevel === 4 && levelFourSection === 3 && octopusBoss && !octopusBoss.defeated;
+    const dragonExitLocked = currentLevel === 5 && levelFiveSection === 3 && dragonBoss && (!dragonBoss.rescued || !dragonBoss.mounted);
     // Asta / Portal dimensional para niveles de transición
-    if (currentLevel !== 6 && !vampireExitLocked && !flagpole.reached && checkCollision(player, flagpole)) {
+    const castleAssaultExit = currentLevel === 6 && levelSixSection === 1;
+    if ((currentLevel !== 6 || castleAssaultExit) && !vampireExitLocked && !octopusExitLocked && !dragonExitLocked && !flagpole.reached && checkCollision(player, flagpole)) {
         flagpole.reached = true;
 
         if (currentLevel === 1) {
@@ -4804,16 +5286,32 @@ function updateGame() {
             } else if (levelThreeSection === 2) {
                 showOverlay('🌿', '¡LA SALIDA ESTÁ EN LAS COPAS!', 'El túnel termina bajo árboles gigantes. Ahora el camino sigue por puentes de madera y lianas. Las tablas empiezan a caer después de pisarlas, así que no te quedes quieto.', 'Trepar al nivel 3.3 🌉');
             } else {
-                showOverlay('🌋', '¡SIETE HUELLAS DE FUEGO!', 'Super Miau dejó atrás los puentes, las lianas y los últimos bichos gigantes. Antiguos tótems felinos marcan un sendero sobre la lava: la Cordillera de las Siete Huellas.', 'Cruzar la cordillera 🔥');
+                showOverlay('🫧', '¡UNA CIUDAD BAJO EL AGUA!', 'Super Miau dejó atrás los puentes y las lianas. Un remolino revela arcos, corales y ruinas construidas por antiguos gatos viajeros.', 'Bajar a la ciudad sumergida 🌀');
             }
         } else if (currentLevel === 4) {
             gameActive = false;
             playSound('victory');
-            showOverlay('🫧', '¡UNA CIUDAD BAJO EL AGUA!', 'El sendero de fuego termina en un remolino. Debajo aparecen arcos, corales y ruinas construidas por antiguos gatos viajeros.', 'Bajar a la ciudad sumergida 🌀');
+            if (levelFourSection === 1) {
+                showOverlay('🌀', '¡LAS CORRIENTES DESPIERTAN!', 'Las ruinas continúan en una zona donde antiguos remolinos custodian la salida. Nadá con cuidado: pueden absorberte y lanzarte por el agua.', 'Entrar al nivel 4.2 🫧');
+            } else if (levelFourSection === 2) {
+                showOverlay('🐙', '¡ALGO SE MUEVE EN LA TINTA!', 'Los remolinos desembocan en una guarida oscura. Un pulpo gigante protege la última salida de la ciudad sumergida.', 'Entrar al nivel 4.3 🫧');
+            } else {
+                showOverlay('🌋', '¡SIETE HUELLAS DE FUEGO!', 'La ciudad sumergida termina al pie de una cordillera. Antiguos tótems felinos marcan un sendero sobre la lava: la Cordillera de las Siete Huellas.', 'Cruzar la cordillera 🔥');
+            }
         } else if (currentLevel === 5) {
             gameActive = false;
             playSound('victory');
-            showOverlay('🏰', '¡LA FORTALEZA ESTÁ CERCA!', 'Una última huella brilla en la puerta de la Fortaleza de Firulais. Tu familia está del otro lado.', 'Rescatar a la familia 🐾');
+            if (levelFiveSection === 1) {
+                showOverlay('☄️', '¡EL CIELO ESTÁ ARDIENDO!', 'El primer sendero termina, pero el volcán despierta. Las piedras del siguiente cruce se hunden al pisarlas y gotas de lava caen desde el cielo.', 'Entrar al nivel 5.2 🔥');
+            } else if (levelFiveSection === 2) {
+                showOverlay('🐉🔒', '¡FIRULAIS SECUESTRÓ AL DRAGÓN!', 'El perro malvado lo encerró al final del sendero y escondió la llave dentro de uno de los lucky blocks. Superá los obstáculos, revisá cada bloque y liberalo.', 'Comenzar el rescate 🔑');
+            } else {
+                showOverlay('🐉🏰', '¡JUNTOS HACIA LA FORTALEZA!', 'Super Miau y el dragón cruzaron juntos el portal. Una última huella brilla en la puerta de la Fortaleza de Firulais. Tu familia está del otro lado.', 'Rescatar a la familia 🐾');
+            }
+        } else if (currentLevel === 6 && levelSixSection === 1) {
+            gameActive = false;
+            playSound('victory');
+            showOverlay('🐉⚔️', '¡LA GUARDIA FUE DERROTADA!', 'Super Miau y el dragón atravesaron la fortaleza y vencieron a los pequeños secuaces. Firulais espera en el salón final: esta batalla será cara a cara.', 'Entrar al nivel 6.2 🐾');
         } else if (currentLevel === 7) {
             startFinalPortalSequence();
         }
@@ -4827,6 +5325,11 @@ function updateGame() {
     trimParticles();
 
     let targetCameraX = player.x - canvas.width / 2.5;
+    if (familyRescueSequence.active && ['approach', 'family_dialog', 'miau_dialog'].includes(familyRescueSequence.phase)) {
+        // Mantiene a Miau y a su familia juntos en el centro durante el reencuentro.
+        const reunionCenter = (player.x + player.width / 2 + familyRescueSequence.x) / 2;
+        targetCameraX = reunionCenter - canvas.width / 2;
+    }
     cameraX = Math.max(0, Math.min(LEVEL_WIDTH - canvas.width, targetCameraX));
 
     if (shakeDuration > 0) {
@@ -4840,8 +5343,8 @@ const SKY_25D = {
     1: { top: '#071426', middle: '#173652', bottom: '#78645e', glow: '#ffd59a', haze: '#8bd5e8' },
     2: { top: '#080717', middle: '#20103d', bottom: '#552c68', glow: '#d8b4fe', haze: '#8b5cf6' },
     3: { top: '#03130e', middle: '#0c3d2c', bottom: '#567a39', glow: '#d9f99d', haze: '#4ade80' },
-    4: { top: '#150407', middle: '#4a1012', bottom: '#9a3412', glow: '#fed7aa', haze: '#fb923c' },
-    5: { top: '#03101f', middle: '#07375b', bottom: '#08728b', glow: '#cffafe', haze: '#22d3ee' },
+    4: { top: '#03101f', middle: '#07375b', bottom: '#08728b', glow: '#cffafe', haze: '#22d3ee' },
+    5: { top: '#150407', middle: '#4a1012', bottom: '#9a3412', glow: '#fed7aa', haze: '#fb923c' },
     6: { top: '#0b050b', middle: '#270b17', bottom: '#511827', glow: '#fecdd3', haze: '#f87171' },
     7: { top: '#100619', middle: '#2b1248', bottom: '#064e3b', glow: '#d1fae5', haze: '#34d399' }
 };
@@ -5131,8 +5634,8 @@ function drawThemedGround(block, x, y) {
         1: { top:'#5c9361', mid:'#254d37', deep:'#14251e', edge:'#b8efb2', glow:'#6ee7b7' },
         2: { top:'#74428b', mid:'#3d1f50', deep:'#160d1d', edge:'#e9d5ff', glow:'#c084fc' },
         3: { top:'#7eaa3e', mid:'#3f6212', deep:'#1c3210', edge:'#d9f99d', glow:'#86efac' },
-        4: { top:'#a94621', mid:'#582313', deep:'#211b1a', edge:'#fed7aa', glow:'#fb923c' },
-        5: { top:'#c9ba82', mid:'#28627a', deep:'#12384a', edge:'#e0f2fe', glow:'#67e8f9' },
+        4: { top:'#c9ba82', mid:'#28627a', deep:'#12384a', edge:'#e0f2fe', glow:'#67e8f9' },
+        5: { top:'#a94621', mid:'#582313', deep:'#211b1a', edge:'#fed7aa', glow:'#fb923c' },
         6: { top:'#7b343d', mid:'#3e2025', deep:'#191012', edge:'#fecdd3', glow:'#f87171' },
         7: { top:'#21836b', mid:'#164e3f', deep:'#171322', edge:'#d1fae5', glow:'#34d399' }
     };
@@ -5181,9 +5684,9 @@ function drawThemedGround(block, x, y) {
         ctx.strokeStyle='#6b21a8'; ctx.lineWidth=2; for(let px=15;px<block.width;px+=65){ctx.beginPath();ctx.moveTo(x+px,y+10);ctx.quadraticCurveTo(x+px+22,y+35,x+px+42,y+62);ctx.stroke();}
     } else if (currentLevel === 3) {
         ctx.fillStyle='#84cc16'; for(let px=12;px<block.width;px+=42){ctx.beginPath();ctx.ellipse(x+px,y+25,8,3,.5,0,Math.PI*2);ctx.fill();}
-    } else if (currentLevel === 4) {
-        ctx.strokeStyle='#f97316';ctx.lineWidth=2;for(let px=25;px<block.width;px+=70){ctx.beginPath();ctx.moveTo(x+px,y+10);ctx.lineTo(x+px-8,y+34);ctx.lineTo(x+px+12,y+52);ctx.stroke();}
     } else if (currentLevel === 5) {
+        ctx.strokeStyle='#f97316';ctx.lineWidth=2;for(let px=25;px<block.width;px+=70){ctx.beginPath();ctx.moveTo(x+px,y+10);ctx.lineTo(x+px-8,y+34);ctx.lineTo(x+px+12,y+52);ctx.stroke();}
+    } else if (currentLevel === 4) {
         ctx.strokeStyle='rgba(255,255,255,.25)';ctx.lineWidth=1;for(let py=26;py<65;py+=15){ctx.beginPath();ctx.moveTo(x,y+py);ctx.quadraticCurveTo(x+block.width/2,y+py-8,x+block.width,y+py);ctx.stroke();}
     } else if (currentLevel === 6) {
         ctx.strokeStyle='#3f3f46';ctx.lineWidth=1;for(let px=0;px<block.width;px+=48)ctx.strokeRect(x+px,y+14+(px%96?18:0),46,20);
@@ -5206,7 +5709,7 @@ function drawThemedStructure(block, x, y) {
     } else if (currentLevel === 3) {
         ctx.fillStyle='#166534';ctx.fillRect(x+18,y,12,block.height);ctx.strokeStyle='#4ade80';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x+24,y);ctx.lineTo(x+24,y+block.height);ctx.stroke();
         ctx.fillStyle='#22c55e';ctx.beginPath();ctx.ellipse(x+7,y+20,18,7,-.4,0,Math.PI*2);ctx.ellipse(x+41,y+42,18,7,.4,0,Math.PI*2);ctx.fill();
-    } else if (currentLevel === 5) {
+    } else if (currentLevel === 4) {
         ctx.strokeStyle='#0891b2';ctx.lineWidth=12;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x+24,y+block.height);ctx.lineTo(x+24,y+10);ctx.moveTo(x+24,y+36);ctx.lineTo(x+4,y+18);ctx.moveTo(x+24,y+55);ctx.lineTo(x+45,y+34);ctx.stroke();
         ctx.fillStyle='#f472b6';ctx.beginPath();ctx.arc(x+4,y+18,6,0,Math.PI*2);ctx.arc(x+45,y+34,6,0,Math.PI*2);ctx.fill();
     } else {
@@ -5384,6 +5887,40 @@ function drawThemedPlatform(block, x, y) {
         return;
     }
 
+    if (block.type === 'lava_stone') {
+        const shake = block.fallTimer >= 0 && !block.falling ? Math.sin(gameTick * 1.15 + block.plankIndex) * 3 : 0;
+        ctx.save();
+        ctx.translate(shake, 0);
+        ctx.shadowColor = '#f97316';
+        ctx.shadowBlur = getShadowBlurValue(block.fallTimer >= 0 ? 14 : 7, 4, 0);
+        const rock = ctx.createLinearGradient(x, y, x, y + block.height);
+        rock.addColorStop(0, '#57534e');
+        rock.addColorStop(.45, '#292524');
+        rock.addColorStop(1, '#0c0a09');
+        ctx.fillStyle = rock;
+        ctx.beginPath();
+        ctx.moveTo(x, y + block.height * .65);
+        ctx.lineTo(x + 9, y + 3);
+        ctx.lineTo(x + block.width * .58, y);
+        ctx.lineTo(x + block.width - 7, y + 5);
+        ctx.lineTo(x + block.width, y + block.height * .72);
+        ctx.lineTo(x + block.width * .78, y + block.height);
+        ctx.lineTo(x + 12, y + block.height - 1);
+        ctx.closePath();
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#fb923c';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x + block.width * .22, y + 4);
+        ctx.lineTo(x + block.width * .38, y + block.height * .55);
+        ctx.lineTo(x + block.width * .58, y + 7);
+        ctx.lineTo(x + block.width * .72, y + block.height - 2);
+        ctx.stroke();
+        ctx.restore();
+        return;
+    }
+
     if (block.type === 'bridge_plank') {
         const shake = block.fallTimer >= 0 && !block.falling ? Math.sin(gameTick * .9 + block.plankIndex) * 2.4 : 0;
         ctx.save();
@@ -5435,7 +5972,7 @@ function drawThemedPlatform(block, x, y) {
     }
 
     if (block.type === 'brick') {
-        const colors=['','#9a5f32','#3f1d4d','#365314','#292524','#155e75','#3f1d24','#312e4a'];
+        const colors=['','#9a5f32','#3f1d4d','#365314','#155e75','#292524','#3f1d24','#312e4a'];
         const brickFace = ctx.createLinearGradient(x, y, x, y + block.height);
         brickFace.addColorStop(0, getCurrentIdentity().accent);
         brickFace.addColorStop(.16, colors[currentLevel]);
@@ -5462,9 +5999,9 @@ function drawThemedPlatform(block, x, y) {
         ctx.fillStyle='#24102d';ctx.beginPath();ctx.ellipse(x+block.width/2,y+block.height/2,block.width/2,block.height/2,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#a855f7';ctx.lineWidth=2;ctx.stroke();
     } else if (currentLevel === 3) {
         ctx.fillStyle='#15803d';ctx.beginPath();ctx.ellipse(x+block.width/2,y+block.height/2,block.width/2,block.height/2,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#86efac';ctx.beginPath();ctx.moveTo(x,y+block.height/2);ctx.lineTo(x+block.width,y+block.height/2);ctx.stroke();
-    } else if (currentLevel === 4) {
-        ctx.fillStyle='#292524';ctx.beginPath();ctx.moveTo(x,y+block.height);ctx.lineTo(x+6,y);ctx.lineTo(x+block.width-8,y+2);ctx.lineTo(x+block.width,y+block.height);ctx.closePath();ctx.fill();ctx.strokeStyle='#fb923c';ctx.stroke();
     } else if (currentLevel === 5) {
+        ctx.fillStyle='#292524';ctx.beginPath();ctx.moveTo(x,y+block.height);ctx.lineTo(x+6,y);ctx.lineTo(x+block.width-8,y+2);ctx.lineTo(x+block.width,y+block.height);ctx.closePath();ctx.fill();ctx.strokeStyle='#fb923c';ctx.stroke();
+    } else if (currentLevel === 4) {
         ctx.fillStyle='#164e63';ctx.fillRect(x,y,block.width,block.height);ctx.strokeStyle='#67e8f9';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,y+3);ctx.quadraticCurveTo(x+block.width/2,y-5,x+block.width,y+3);ctx.stroke();
     } else if (currentLevel === 6) {
         ctx.fillStyle='#292126';ctx.fillRect(x,y,block.width,block.height);ctx.fillStyle='#7f1d1d';ctx.fillRect(x,y,block.width,4);for(let px=12;px<block.width;px+=28){ctx.strokeStyle='#52525b';ctx.strokeRect(x+px,y+6,20,Math.max(4,block.height-8));}
@@ -5588,7 +6125,9 @@ function drawVampireEncounter() {
 
     const x = vampireBattle.x - cameraX;
     const y = vampireBattle.y;
-    const dir = vampireBattle.vx >= 0 ? 1 : -1;
+    const vampireCenterX = vampireBattle.x + vampireBattle.width / 2;
+    const playerCenterX = player.x + player.width / 2;
+    const dir = playerCenterX >= vampireCenterX ? 1 : -1;
     const floatWave = Math.sin(vampireBattle.phase * 2.1) * 3;
     const flashing = vampireBattle.hurtTimer > 0 && Math.floor(gameTick / 3) % 2 === 0;
 
@@ -5597,47 +6136,24 @@ function drawVampireEncounter() {
     ctx.scale(dir, 1);
     ctx.shadowColor = flashing ? '#cffafe' : '#a855f7';
     ctx.shadowBlur = getShadowBlurValue(flashing ? 22 : 14, 8, 0);
-
-    // Capa amplia y silueta caricaturesca del jefe extra.
-    ctx.fillStyle = flashing ? '#cffafe' : '#35114c';
-    ctx.beginPath();
-    ctx.moveTo(-6, -18);
-    ctx.quadraticCurveTo(-38, 6, -31, 41);
-    ctx.lineTo(-7, 29);
-    ctx.lineTo(0, 38);
-    ctx.lineTo(8, 28);
-    ctx.lineTo(31, 41);
-    ctx.quadraticCurveTo(36, 6, 7, -18);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = flashing ? '#e0f2fe' : '#111827';
-    traceRoundedRect(ctx, -13, -14, 26, 42, 8); ctx.fill();
-    ctx.fillStyle = '#ede9fe';
-    ctx.beginPath(); ctx.arc(0, -25, 15, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#181026';
-    ctx.beginPath();
-    ctx.arc(0, -29, 15, Math.PI, Math.PI * 2);
-    ctx.lineTo(13, -23); ctx.lineTo(4, -27); ctx.lineTo(-2, -19); ctx.lineTo(-7, -27); ctx.lineTo(-14, -22); ctx.closePath(); ctx.fill();
-
-    ctx.shadowColor = '#ef4444';
-    ctx.shadowBlur = getShadowBlurValue(8, 4, 0);
-    ctx.fillStyle = '#ef4444';
-    ctx.beginPath(); ctx.arc(-5, -25, 2.2, 0, Math.PI * 2); ctx.arc(5, -25, 2.2, 0, Math.PI * 2); ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.moveTo(-5, -18); ctx.lineTo(-2, -12); ctx.lineTo(0, -18); ctx.closePath(); ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(2, -18); ctx.lineTo(5, -12); ctx.lineTo(7, -18); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#facc15';
-    ctx.beginPath(); ctx.arc(0, -4, 3.5, 0, Math.PI * 2); ctx.fill();
+    if (VAMPIRE_SPRITE.complete && VAMPIRE_SPRITE.naturalWidth > 0) {
+        const drawHeight = 158;
+        const drawWidth = drawHeight * (VAMPIRE_SPRITE.naturalWidth / VAMPIRE_SPRITE.naturalHeight);
+        ctx.globalAlpha = flashing ? 0.55 : 1;
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(VAMPIRE_SPRITE, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+    }
     ctx.restore();
 }
 
 // Dibuja todo lo visible del frame actual: fondo, mapa, enemigos, jugador y efectos.
 function drawLevelThreeSectionBackdrop() {
     if (currentLevel !== 3) return;
+
+    // El fondo procedural del túnel sólo sirve mientras cargan las nuevas
+    // ilustraciones. Luego deja libres las capas jugables de la sección.
+    if (levelThreeSection === 2 && hasLoadedProgressiveBackground('underground')) return;
 
     if (levelThreeSection === 2) {
         // Túnel cerrado: tapa por completo el cielo del valle.
@@ -5756,13 +6272,37 @@ function drawLevelThreeMechanics() {
             const x = hole.x - cameraX;
             if (!isScreenPosition(x, hole.width, 80)) return;
             ctx.save();
-            ctx.fillStyle = '#0d0805';
-            ctx.beginPath(); ctx.ellipse(x + hole.width / 2, 376, hole.width / 2, 15, 0, 0, Math.PI * 2); ctx.fill();
-            ctx.strokeStyle = '#a16207'; ctx.lineWidth = 2; ctx.globalAlpha = .7;
-            ctx.beginPath(); ctx.ellipse(x + hole.width / 2, 375, hole.width / 2 - 5, 11, 0, Math.PI, Math.PI * 2); ctx.stroke();
-            ctx.globalAlpha = 1;
-            ctx.fillStyle = 'rgba(2,6,23,.82)'; traceRoundedRect(ctx, x + 15, 334, hole.width - 30, 18, 7); ctx.fill();
-            ctx.fillStyle = '#fde68a'; ctx.font = 'bold 8px Fredoka'; ctx.textAlign = 'center'; ctx.fillText('↓ / S · ESCONDER', x + hole.width / 2, 347);
+            const centerX = x + hole.width / 2;
+            if (CAVE_SPRITE.complete && CAVE_SPRITE.naturalWidth > 0) {
+                const caveWidth = hole.width + 22;
+                const caveHeight = caveWidth * (CAVE_SPRITE.naturalHeight / CAVE_SPRITE.naturalWidth);
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.shadowColor = 'rgba(251,191,36,.34)';
+                ctx.shadowBlur = getShadowBlurValue(10, 5, 0);
+                ctx.drawImage(CAVE_SPRITE, centerX - caveWidth / 2, 384 - caveHeight, caveWidth, caveHeight);
+            }
+            ctx.fillStyle = 'rgba(2,6,23,.88)'; traceRoundedRect(ctx, centerX - 58, 273, 116, 20, 7); ctx.fill();
+            ctx.fillStyle = '#fde68a'; ctx.font = 'bold 8px Fredoka'; ctx.textAlign = 'center';
+            ctx.fillText('↓ / S · REFUGIARSE', centerX, 287);
+            ctx.restore();
+        });
+
+        fallingTunnelRocks.forEach(rock => {
+            const x = rock.x - cameraX;
+            if (!isScreenPosition(x - 30, rock.width + 60, 100)) return;
+            ctx.save();
+            if (rock.state === 'warning') {
+                const pulse = .35 + Math.abs(Math.sin(gameTick * .18)) * .45;
+                ctx.fillStyle = `rgba(248,113,113,${pulse})`;
+                ctx.beginPath(); ctx.ellipse(x + rock.width / 2, 25, rock.width * .7, 10, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#fecaca'; ctx.font = 'bold 18px Fredoka'; ctx.textAlign = 'center'; ctx.fillText('!', x + rock.width / 2, 54);
+            } else if (rock.state === 'falling') {
+                ctx.translate(x + rock.width / 2, rock.y + rock.height / 2);
+                ctx.rotate(rock.rotation);
+                ctx.fillStyle = '#57534e'; ctx.strokeStyle = '#a8a29e'; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.moveTo(-rock.width*.45,-rock.height*.25); ctx.lineTo(-rock.width*.12,-rock.height*.52); ctx.lineTo(rock.width*.43,-rock.height*.22); ctx.lineTo(rock.width*.35,rock.height*.42); ctx.lineTo(-rock.width*.32,rock.height*.48); ctx.closePath(); ctx.fill(); ctx.stroke();
+            }
             ctx.restore();
         });
 
@@ -5781,13 +6321,20 @@ function drawLevelThreeMechanics() {
             ctx.lineTo(x + 19 + dir * 235, 386);
             ctx.closePath(); ctx.fill();
 
-            ctx.fillStyle = '#3f2a1f';
-            ctx.beginPath(); ctx.ellipse(x + 19, mole.y + 20, 19, 16, 0, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#8b5e3c';
-            ctx.beginPath(); ctx.arc(x + 19, mole.y + 10, 13, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#f5d0a9'; ctx.beginPath(); ctx.ellipse(x + 19 + dir * 9, mole.y + 13, 6, 4, 0, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = mole.alertTimer > 0 ? '#ef4444' : '#f8fafc';
-            ctx.beginPath(); ctx.arc(x + 19 + dir * 5, mole.y + 7, 2.2, 0, Math.PI * 2); ctx.fill();
+            if (MOLE_SPRITE.complete && MOLE_SPRITE.naturalWidth > 0) {
+                const moleWidth = 76;
+                const moleHeight = moleWidth * (MOLE_SPRITE.naturalHeight / MOLE_SPRITE.naturalWidth);
+                const moleBob = Math.abs(Math.sin(gameTick * .13 + mole.phase)) * .8;
+                ctx.save();
+                ctx.translate(x + mole.width / 2, 0);
+                ctx.scale(dir, 1);
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.shadowColor = mole.alertTimer > 0 ? '#ef4444' : '#fbbf24';
+                ctx.shadowBlur = getShadowBlurValue(mole.alertTimer > 0 ? 12 : 6, 4, 0);
+                ctx.drawImage(MOLE_SPRITE, -moleWidth / 2, mole.y + mole.height + 9 - moleHeight - moleBob, moleWidth, moleHeight);
+                ctx.restore();
+            }
             if (mole.spottedFlash > 0) {
                 ctx.fillStyle = '#ef4444'; ctx.font = 'bold 19px Fredoka'; ctx.textAlign = 'center'; ctx.fillText('!', x + 19, mole.y - 8);
             }
@@ -5811,6 +6358,206 @@ function drawLevelThreeMechanics() {
     });
 }
 
+function drawUnderwaterWhirlpools() {
+    if (currentLevel !== 4 || levelFourSection !== 2) return;
+
+    underwaterWhirlpools.forEach(whirlpool => {
+        const x = whirlpool.x - cameraX;
+        if (!isScreenPosition(x - whirlpool.radius, whirlpool.radius * 2, 80)) return;
+        ctx.save();
+        ctx.translate(x, whirlpool.y);
+        ctx.rotate(gameTick * .035 * whirlpool.direction + whirlpool.phase);
+        for (let ring = 0; ring < 5; ring++) {
+            const radius = whirlpool.radius * (1 - ring * .16);
+            ctx.strokeStyle = `rgba(${ring % 2 ? '103,232,249' : '34,211,238'},${.22 + ring * .10})`;
+            ctx.lineWidth = 8 - ring;
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, ring * .6, Math.PI * 1.55 + ring * .55);
+            ctx.stroke();
+        }
+        ctx.fillStyle = 'rgba(2,20,38,.72)';
+        ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+    });
+
+    mantaRays.forEach((ray, index) => {
+        const x = ray.x - cameraX;
+        if (!isScreenPosition(x - 20, ray.width + 40, 80)) return;
+        ctx.save();
+        ctx.translate(x + ray.width / 2, ray.y);
+        if (ray.vx < 0) ctx.scale(-1, 1);
+        if (MANTA_RAY_SPRITE.complete && MANTA_RAY_SPRITE.naturalWidth) {
+            const visualSize = 156;
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(MANTA_RAY_SPRITE, -visualSize / 2, -78, visualSize, visualSize);
+        } else {
+            ctx.fillStyle = '#2563a5';
+            ctx.beginPath(); ctx.ellipse(0, 0, ray.width / 2, ray.height / 2, 0, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.restore();
+        if (index === 0 && Math.abs(x) < canvas.width) {
+            ctx.save(); ctx.fillStyle = 'rgba(3,17,34,.82)'; traceRoundedRect(ctx, x - 38, ray.y - 52, 190, 24, 8); ctx.fill();
+            ctx.fillStyle = '#cffafe'; ctx.font = 'bold 9px Fredoka'; ctx.textAlign = 'center';
+            ctx.fillText('↓ / S SUBIR · FLECHAS: MANEJAR', x + 57, ray.y - 36); ctx.restore();
+        }
+    });
+
+    if (whirlpoolTransit) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(3,17,34,.82)'; traceRoundedRect(ctx, canvas.width / 2 - 95, 48, 190, 30, 10); ctx.fill();
+        ctx.strokeStyle = '#67e8f9'; ctx.lineWidth = 2; traceRoundedRect(ctx, canvas.width / 2 - 94, 49, 188, 28, 9); ctx.stroke();
+        ctx.fillStyle = '#cffafe'; ctx.font = 'bold 11px Fredoka'; ctx.textAlign = 'center';
+        ctx.fillText('¡VIAJE POR LA CORRIENTE!', canvas.width / 2, 68);
+        ctx.restore();
+    }
+}
+
+function drawOctopusBattle() {
+    if (currentLevel !== 4 || levelFourSection !== 3 || !octopusBoss) return;
+
+    waterBubbleShots.forEach(shot => {
+        const x = shot.x - cameraX;
+        ctx.save(); ctx.fillStyle = 'rgba(207,250,254,.38)'; ctx.strokeStyle = '#67e8f9'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(x + 9, shot.y + 9, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.restore();
+    });
+    octopusInkBlobs.forEach(ink => {
+        const x = ink.x - cameraX;
+        ctx.save(); ctx.shadowColor = '#a855f7'; ctx.shadowBlur = 10; ctx.fillStyle = '#160b2d';
+        ctx.beginPath(); ctx.arc(x + 12, ink.y + 12, 12, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#7e22ce'; ctx.beginPath(); ctx.arc(x + 8, ink.y + 8, 4, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    });
+
+    if (!octopusBoss.defeated) {
+        const x = octopusBoss.x - cameraX;
+        ctx.save();
+        if (octopusBoss.hurtTimer > 0) ctx.globalAlpha = .45;
+        if (OCTOPUS_BOSS_SPRITE.complete && OCTOPUS_BOSS_SPRITE.naturalWidth) {
+            const visualSize = 190;
+            const centerX = x + octopusBoss.width / 2;
+            const centerY = octopusBoss.y + octopusBoss.height / 2;
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(
+                OCTOPUS_BOSS_SPRITE,
+                centerX - visualSize / 2,
+                centerY - visualSize / 2,
+                visualSize,
+                visualSize
+            );
+        } else {
+            ctx.translate(x + octopusBoss.width / 2, octopusBoss.y + 48);
+            ctx.fillStyle = '#9333ea';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 52, 55, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    if (octopusBoss.active || octopusBoss.defeated) {
+        const ratio = Math.max(0, octopusBoss.hp / octopusBoss.maxHp);
+        const playerRatio = Math.max(0, octopusBoss.playerHp / octopusBoss.playerMaxHp);
+        ctx.save(); ctx.fillStyle = 'rgba(15,8,30,.9)'; traceRoundedRect(ctx, 205, 20, 390, 42, 12); ctx.fill();
+        ctx.fillStyle = '#3b174f'; traceRoundedRect(ctx, 220, 43, 360, 10, 5); ctx.fill();
+        ctx.fillStyle = octopusBoss.defeated ? '#4ade80' : '#e879f9'; traceRoundedRect(ctx, 220, 43, 360 * ratio, 10, 5); ctx.fill();
+        ctx.fillStyle = '#fdf4ff'; ctx.font = 'bold 12px Fredoka'; ctx.textAlign = 'center';
+        ctx.fillText(octopusBoss.defeated ? '¡PULPO DERROTADO!' : '🐙 GUARDIÁN DE TINTA · F / SHIFT: BURBUJAS', 400, 36);
+        if (!octopusBoss.defeated) {
+            ctx.fillStyle = 'rgba(15,23,42,.92)'; traceRoundedRect(ctx, 270, 68, 260, 31, 10); ctx.fill();
+            ctx.fillStyle = '#3f1d2e'; traceRoundedRect(ctx, 285, 85, 230, 8, 4); ctx.fill();
+            ctx.fillStyle = playerRatio > .3 ? '#fb7185' : '#ef4444'; traceRoundedRect(ctx, 285, 85, 230 * playerRatio, 8, 4); ctx.fill();
+            ctx.fillStyle = '#fff1f2'; ctx.font = 'bold 11px Fredoka';
+            ctx.fillText(`🐱 SUPER MIAU · ${octopusBoss.playerHp}/${octopusBoss.playerMaxHp}`, 400, 80);
+        }
+        ctx.restore();
+    }
+}
+
+function drawDragonBattle() {
+    const dragonSection = (currentLevel === 5 && levelFiveSection === 3) || (currentLevel === 6 && levelSixSection === 1);
+    if (!dragonSection || !dragonBoss) return;
+
+    const x = dragonBoss.x - cameraX;
+    if (dragonBoss.mounted) {
+        const visualWidth = 220;
+        const visualHeight = visualWidth * 1192 / 1307;
+        const centerX = player.x + player.width / 2 - cameraX;
+        const centerY = player.y + player.height / 2;
+        const mountedSprite = player.attackAnimationTimer > 0 ? DRAGON_AND_MIAU_ATTACK_SPRITE : DRAGON_AND_MIAU_SPRITE;
+        if (mountedSprite.complete && mountedSprite.naturalWidth) {
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.scale(dragonBoss.facing < 0 ? -1 : 1, 1);
+            ctx.drawImage(mountedSprite, -visualWidth / 2, -visualHeight * .31, visualWidth, visualHeight);
+            ctx.restore();
+        }
+    } else {
+        const pose = dragonBoss.rescued ? 'festejando' : 'parado';
+        const image = DRAGON_SPRITES[pose];
+        const jumpOffset = dragonBoss.rescued && dragonBoss.celebrationTimer > 0
+            ? -Math.abs(Math.sin((210 - dragonBoss.celebrationTimer) * .12)) * 42
+            : 0;
+        if (image.complete && image.naturalWidth) {
+            ctx.save();
+            ctx.translate(x + dragonBoss.width / 2, dragonBoss.y + jumpOffset);
+            ctx.scale(dragonBoss.facing < 0 ? -1 : 1, 1);
+            ctx.drawImage(image, -dragonBoss.width / 2, 0, dragonBoss.width, dragonBoss.height);
+            ctx.restore();
+        }
+    }
+
+    if (!dragonBoss.rescued || dragonBoss.unlockTimer > 0) {
+        const cageAlpha = dragonBoss.rescued ? dragonBoss.unlockTimer / 90 : 1;
+        ctx.save();
+        ctx.globalAlpha = cageAlpha;
+        ctx.translate(x - 20, dragonBoss.y - 10);
+        ctx.fillStyle = 'rgba(15,23,42,.16)'; ctx.fillRect(0, 0, dragonBoss.width + 40, dragonBoss.height + 18);
+        ctx.strokeStyle = '#475569'; ctx.lineWidth = 8; ctx.strokeRect(0, 0, dragonBoss.width + 40, dragonBoss.height + 18);
+        ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 5;
+        for (let barX = 18; barX < dragonBoss.width + 40; barX += 25) {
+            ctx.beginPath(); ctx.moveTo(barX, 2); ctx.lineTo(barX, dragonBoss.height + 16); ctx.stroke();
+        }
+        ctx.fillStyle = '#334155'; traceRoundedRect(ctx, dragonBoss.width / 2 + 5, 78, 30, 39, 5); ctx.fill();
+        ctx.fillStyle = dragonKey && dragonKey.collected ? '#fde047' : '#94a3b8';
+        ctx.beginPath(); ctx.arc(dragonBoss.width / 2 + 20, 91, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.fillRect(dragonBoss.width / 2 + 17, 94, 6, 12);
+        ctx.fillStyle = 'rgba(69,10,10,.94)'; traceRoundedRect(ctx, 10, -32, dragonBoss.width + 20, 25, 6); ctx.fill();
+        ctx.fillStyle = '#fecaca'; ctx.font = 'bold 9px Fredoka'; ctx.textAlign = 'center';
+        ctx.fillText('PRISIONERO DE FIRULAIS', dragonBoss.width / 2 + 20, -16);
+        ctx.restore();
+    }
+
+    const searchedBlocks = blocks.filter(block => block.searchSpot && block.hasBeenHit).length;
+    const totalSearchBlocks = blocks.filter(block => block.searchSpot).length;
+    ctx.save();
+    ctx.fillStyle = 'rgba(31,8,8,.9)'; traceRoundedRect(ctx, 170, 18, 460, 46, 12); ctx.fill();
+    ctx.fillStyle = '#fff7ed'; ctx.font = 'bold 13px Fredoka'; ctx.textAlign = 'center';
+    const dragonMessage = dragonBoss.mounted
+        ? '🐉 FLECHAS O WASD: VOLAR · F / SHIFT: FUEGO'
+        : dragonBoss.rescued
+        ? '🐾 SALTÁ SOBRE EL LOMO DEL DRAGÓN'
+        : dragonKey && dragonKey.collected
+            ? '🔑 ACERCATE A LA JAULA Y DESCIFRÁ LA COMBINACIÓN'
+            : `🔎 BUSCÁ LA LLAVE EN LOS LUCKY BLOCKS · ${searchedBlocks}/${totalSearchBlocks}`;
+    ctx.fillText(dragonMessage, 400, 46);
+    if (currentLevel === 6 && levelSixSection === 1) {
+        const progress = Math.max(0, Math.min(1, player.x / Math.max(1, flagpole.x)));
+        const tramo = Math.min(3, Math.floor(progress * 3) + 1);
+        ctx.fillStyle = 'rgba(15,23,42,.88)';
+        traceRoundedRect(ctx, 250, 70, 300, 28, 9); ctx.fill();
+        ctx.fillStyle = '#334155';
+        traceRoundedRect(ctx, 315, 82, 220, 7, 4); ctx.fill();
+        ctx.fillStyle = '#fb923c';
+        traceRoundedRect(ctx, 315, 82, 220 * progress, 7, 4); ctx.fill();
+        ctx.fillStyle = '#ffedd5';
+        ctx.font = 'bold 10px Fredoka';
+        ctx.textAlign = 'left';
+        ctx.fillText(`TRAMO ${tramo}/3`, 265, 89);
+    }
+    ctx.restore();
+}
+
 function renderGame() {
     ctx.save();
 
@@ -5827,11 +6574,24 @@ function renderGame() {
         drawStreetEnvironment();
     } else if (currentLevel === 1 && levelOneSection <= 2) {
         drawParqueSurenoEnvironment();
-    } else {
+    } else if (currentLevel === 4) {
+        // La Ciudad Sumergida usa siempre su cielo acuático procedural.
+        // Esta rama explícita impide heredar el panorama de lava del 5.
+        drawAtmosphericBackdrop();
+    } else if (currentLevel === 6) {
+        // Los capítulos del dragón y la batalla final no reutilizan el
+        // antiguo castillo mientras cargan sus ilustraciones.
+        if (!drawProgressiveLevelBackground()) {
+            ctx.fillStyle = '#09030d';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+    } else if (!drawProgressiveLevelBackground()) {
         drawAtmosphericBackdrop();
     }
 
     drawLevelThreeSectionBackdrop();
+    drawUnderwaterWhirlpools();
+    drawOctopusBattle();
 
     backgroundDecorations.forEach(deco => {
         let drawX = deco.x - cameraX * deco.depth;
@@ -5869,14 +6629,6 @@ function renderGame() {
             ctx.fill();
             ctx.fillStyle = deco.color2;
             ctx.fillRect(drawX - 6, deco.y + deco.radius - 10, 12, 190);
-        } else if (deco.type === 'volcano') {
-            ctx.fillStyle = '#140c0d';
-            ctx.beginPath();
-            ctx.moveTo(drawX - deco.size / 2, 380);
-            ctx.lineTo(drawX, 380 - deco.size);
-            ctx.lineTo(drawX + deco.size / 2, 380);
-            ctx.closePath();
-            ctx.fill();
         } else if (deco.type === 'castle_tower') {
             ctx.fillStyle = '#1f1315';
             ctx.fillRect(drawX, deco.y, deco.width, deco.height);
@@ -6053,8 +6805,22 @@ function renderGame() {
             ctx.beginPath(); ctx.moveTo(-30,-18); ctx.lineTo(28,-26); ctx.lineTo(18,25); ctx.lineTo(-22,20); ctx.closePath(); ctx.fill(); ctx.stroke();
             drawPawMark(ctx,0,0,.75,shardColors[deco.world-1]); ctx.restore();
         } else if (deco.type === 'dimensional_rift') {
-            ctx.save(); ctx.translate(drawX,deco.y); ctx.rotate(gameTick*.008); ctx.shadowColor='#34d399'; ctx.shadowBlur=getShadowBlurValue(25, 12, 0); ctx.strokeStyle='#34d399'; ctx.lineWidth=8;
-            ctx.beginPath(); ctx.ellipse(0,0,46,105,0,0,Math.PI*2); ctx.stroke(); ctx.strokeStyle='#a7f3d0'; ctx.lineWidth=2; ctx.beginPath(); ctx.ellipse(0,0,28,86,0,0,Math.PI*2); ctx.stroke(); ctx.restore();
+            const riftFrame = PORTAL_SPRITES[Math.floor(gameTick / 12) % 3];
+            if (riftFrame?.complete && riftFrame.naturalWidth) {
+                const riftSize = 230;
+                ctx.save();
+                ctx.globalAlpha = 0.94;
+                ctx.shadowColor = '#34d399';
+                ctx.shadowBlur = getShadowBlurValue(25, 12, 0);
+                ctx.drawImage(
+                    riftFrame,
+                    drawX - riftSize / 2,
+                    deco.y - riftSize * 0.58,
+                    riftSize,
+                    riftSize
+                );
+                ctx.restore();
+            }
         }
     });
 
@@ -6062,8 +6828,9 @@ function renderGame() {
     // bosque y transforma la zona final en una habitación interior.
     drawVampireRoomBackground();
 
-    // Dibujar Río de Lava burbujeante (Nivel 4 y Nivel 7)
-    if (currentLevel === 4 || currentLevel === 7) {
+    // El río de lava pertenece únicamente al mundo volcánico. La Dimensión
+    // Quebrada conserva el terreno claro incluido en salida1–4.
+    if (currentLevel === 5 && levelFiveSection !== 3) {
         if (useMediumVisualEffects()) {
             let lavaGrad = ctx.createLinearGradient(0, 380, 0, canvas.height);
             lavaGrad.addColorStop(0, '#f97316'); 
@@ -6105,6 +6872,7 @@ function renderGame() {
 
     drawPlaygroundMechanicHints();
     drawLevelThreeMechanics();
+    drawDragonBattle();
 
     if (currentLevel === 2 && levelTwoSection === 3) {
         if (batSprayPickup && !batSprayPickup.collected && isOnScreen(batSprayPickup.x, batSprayPickup.width, 100)) {
@@ -6207,17 +6975,56 @@ function renderGame() {
         drawDogcatcher();
     }
 
-    if (currentLevel === 7) {
+    if (currentLevel === 7 || (currentLevel === 5 && levelFiveSection === 2)) {
         hazards.forEach(h => {
             if (!isOnScreen(h.x, h.width || 20, 80)) return;
             let hx = h.x - cameraX;
             ctx.save();
-            ctx.shadowColor = '#f97316';
-            ctx.shadowBlur = getShadowBlurValue(12, 5, 0);
-            ctx.fillStyle = '#ef4444';
+            if (h.kind === 'lava_drop' && h.warning > 0) {
+                const pulse = .45 + Math.sin(gameTick * .35) * .25;
+                ctx.globalAlpha = pulse;
+                ctx.fillStyle = '#facc15';
+                ctx.beginPath();
+                ctx.moveTo(hx + 12, 8);
+                ctx.lineTo(hx + 2, 27);
+                ctx.lineTo(hx + 22, 27);
+                ctx.closePath();
+                ctx.fill();
+                ctx.fillStyle = '#7f1d1d';
+                ctx.font = 'bold 15px Fredoka';
+                ctx.textAlign = 'center';
+                ctx.fillText('!', hx + 12, 24);
+                ctx.restore();
+                return;
+            }
+            const skyShard = h.kind === 'sky_shard';
+            ctx.shadowColor = skyShard ? '#7dd3fc' : '#f97316';
+            ctx.shadowBlur = getShadowBlurValue(skyShard ? 16 : 12, 5, 0);
+            ctx.fillStyle = h.kind === 'lava_drop' ? '#fb923c' : skyShard ? '#bae6fd' : '#ef4444';
             ctx.beginPath();
-            ctx.arc(hx + 10, h.y + 10, 10, 0, Math.PI * 2);
+            if (h.kind === 'lava_drop') ctx.ellipse(hx + 12, h.y + 17, 11, 17, 0, 0, Math.PI * 2);
+            else if (skyShard) {
+                ctx.translate(hx + h.width / 2, h.y + h.height / 2);
+                ctx.rotate(h.rotation);
+                ctx.moveTo(-h.width * .48, -h.height * .12);
+                ctx.lineTo(-h.width * .14, -h.height * .5);
+                ctx.lineTo(h.width * .5, -h.height * .22);
+                ctx.lineTo(h.width * .32, h.height * .48);
+                ctx.lineTo(-h.width * .38, h.height * .34);
+                ctx.closePath();
+            } else ctx.arc(hx + 10, h.y + 10, 10, 0, Math.PI * 2);
             ctx.fill();
+            if (skyShard) {
+                ctx.strokeStyle = '#f0f9ff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(-h.width * .22, -h.height * .18);
+                ctx.lineTo(h.width * .2, h.height * .2);
+                ctx.strokeStyle = 'rgba(56, 189, 248, .8)';
+                ctx.lineWidth = 1.2;
+                ctx.stroke();
+            }
             ctx.restore();
         });
     }
@@ -6264,12 +7071,25 @@ function renderGame() {
         if (!isOnScreen(proj.x, proj.width, 90)) return;
         let prX = proj.x - cameraX;
         ctx.save();
-        ctx.shadowColor = '#facc15';
+        const dragonFire = proj.kind === 'dragon_fire';
+        ctx.shadowColor = dragonFire ? '#f97316' : '#facc15';
         ctx.shadowBlur = getShadowBlurValue(12, 6, 0);
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = dragonFire ? '#fb923c' : '#ffffff';
         ctx.translate(prX + proj.width/2, proj.y + proj.height/2);
-        ctx.rotate(proj.rotation);
-        drawStarShape(ctx, 0, 0, 5, proj.width/2, proj.width/4);
+        if (dragonFire) {
+            const direction = proj.vx >= 0 ? 1 : -1;
+            ctx.scale(direction, 1);
+            ctx.beginPath();
+            ctx.moveTo(proj.width / 2, 0);
+            ctx.quadraticCurveTo(0, -proj.height / 2, -proj.width / 2, 0);
+            ctx.quadraticCurveTo(0, proj.height / 2, proj.width / 2, 0);
+            ctx.fill();
+            ctx.fillStyle = '#fde047';
+            ctx.beginPath(); ctx.ellipse(5, 0, proj.width * .22, proj.height * .22, 0, 0, Math.PI * 2); ctx.fill();
+        } else {
+            ctx.rotate(proj.rotation);
+            drawStarShape(ctx, 0, 0, 5, proj.width/2, proj.width/4);
+        }
         ctx.restore();
     });
 
@@ -6286,7 +7106,7 @@ function renderGame() {
         ctx.restore();
     });
 
-    if (currentLevel === 5) {
+    if (currentLevel === 4) {
         bubbles.forEach(b => {
             if (!b.available) return;
             if (!isOnScreen(b.x, b.width, 80)) return;
@@ -6318,12 +7138,12 @@ function renderGame() {
             ctx.fillStyle = '#cffafe';
             ctx.font = 'bold 9px Fredoka';
             ctx.textAlign = 'center';
-            ctx.fillText('+ AIRE', bx + 17, b.y + 48);
+            ctx.fillText(levelFourSection === 3 ? '+ AIRE Y VIDA' : '+ AIRE', bx + 17, b.y + 48);
             ctx.restore();
         });
     }
 
-    if (currentLevel === 5) {
+    if (currentLevel === 4) {
         const waterIntroAge = gameTick - levelStartedAt;
         const shouldShowBubbleHint = waterIntroAge < 420 || player.oxygen < 60;
         const nearestBubble = bubbles.reduce((closest, bubble) => {
@@ -6378,7 +7198,7 @@ function renderGame() {
     }
 
     // Ocultar el portal final de nivel en el Castillo (Nivel 6)
-    if (currentLevel !== 6 && !isVampireBattleSection()) {
+    if ((currentLevel !== 6 || levelSixSection === 1 || familyRescueSequence.active) && !isVampireBattleSection()) {
         let fX = flagpole.x - cameraX;
         let fY = flagpole.y;
         let fW = flagpole.width;
@@ -6399,11 +7219,13 @@ function renderGame() {
         let portalColor = islandGatewayPortal ? '#8b5cf6' : '#ec4899'; 
         if (currentLevel === 2) portalColor = '#a855f7'; 
         if (currentLevel === 3) portalColor = '#10b981'; 
-        if (currentLevel === 4) portalColor = '#f97316'; 
-        if (currentLevel === 5) portalColor = '#22d3ee'; 
+        if (currentLevel === 4) portalColor = '#22d3ee';
+        if (currentLevel === 5) portalColor = '#f97316';
         if (currentLevel === 7) portalColor = '#34d399'; 
         
         const finalPortalActive = currentLevel === 7 && finalPortalSequence.active;
+        const portalArtReady = PORTAL_SPRITES.slice(0, finalPortalActive ? 4 : 3)
+            .every(image => image.complete && image.naturalWidth);
         const collapseAmount = finalPortalActive ? finalPortalSequence.collapse : 0;
         const shatterAmount = finalPortalActive ? finalPortalSequence.shatter : 0;
         const pulseAmount = finalPortalActive ? finalPortalSequence.pulse : 0;
@@ -6412,6 +7234,9 @@ function renderGame() {
             ? Math.max(0.05, 1 - collapseAmount * 0.9 - shatterAmount * 0.45)
             : Math.abs(Math.sin(gameTick * 0.05));
 
+        // El dibujo geométrico anterior queda únicamente como respaldo durante
+        // la carga. Una vez listos los PNG, no se mezcla con el portal nuevo.
+        if (!portalArtReady) {
         if (finalPortalActive) {
             ctx.save();
             ctx.globalAlpha = Math.min(0.82, 0.18 + beamAmount * 0.4);
@@ -6487,6 +7312,32 @@ function renderGame() {
                 ctx.stroke();
             }
         }
+        }
+
+        // Los tres primeros cuadros mantienen vivos todos los portales. En la
+        // secuencia final el cuarto completa visualmente el cierre de la grieta.
+        let portalFrameIndex = Math.floor(gameTick / 12) % 3;
+        if (finalPortalActive && finalPortalSequence.phase === 'closing') {
+            portalFrameIndex = Math.min(3, Math.floor(collapseAmount * 4));
+        } else if (finalPortalActive && ['shatter', 'reunion', 'afterglow', 'fade'].includes(finalPortalSequence.phase)) {
+            portalFrameIndex = 3;
+        }
+        const portalSprite = PORTAL_SPRITES[portalFrameIndex];
+        if (portalSprite?.complete && portalSprite.naturalWidth) {
+            const spriteSize = islandGatewayPortal ? 190 : Math.max(150, fH * 1.55);
+            ctx.globalAlpha = finalPortalActive
+                ? Math.max(0, 1 - shatterAmount - finalPortalSequence.fade * 0.65)
+                : 0.92;
+            ctx.shadowColor = portalColor;
+            ctx.shadowBlur = getShadowBlurValue(18, 8, 0);
+            ctx.drawImage(
+                portalSprite,
+                fX + fW / 2 - spriteSize / 2,
+                fY + fH - spriteSize * 0.91,
+                spriteSize,
+                spriteSize
+            );
+        }
         
         ctx.restore();
     }
@@ -6507,44 +7358,18 @@ function renderGame() {
         }
 
         if (enemy.type === 'bug') {
-            // Nivel 3: Bichos gigantes del valle (Araña con patas y antenas)
             ctx.translate(ex + enemy.width / 2, ey + enemy.height / 2);
-            let dir = enemy.vx > 0 ? 1 : -1;
+            const dir = enemy.vx > 0 ? 1 : -1;
             ctx.scale(dir, 1);
-
-            const bugBody = enemy.variant === 'leaper' ? '#65a30d' : enemy.variant === 'shell' ? '#78350f' : '#065f46';
-            const bugHead = enemy.variant === 'leaper' ? '#a3e635' : enemy.variant === 'shell' ? '#92400e' : '#047857';
-            ctx.fillStyle = bugBody;
-            ctx.beginPath();
-            ctx.ellipse(0, 0, 12, 10, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = bugHead;
-            ctx.beginPath();
-            ctx.arc(8, -4, 6, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Ojos rojos brillantes
-            ctx.fillStyle = '#ef4444';
-            ctx.beginPath();
-            ctx.arc(10, -5, 2, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Patas móviles
-            ctx.strokeStyle = '#022c22';
-            ctx.lineWidth = 2.5;
-            let wiggle = Math.sin(gameTick * 0.25) * 6;
-            ctx.beginPath();
-            ctx.moveTo(-6, 2); ctx.lineTo(-12, 8 + wiggle);
-            ctx.moveTo(0, 2); ctx.lineTo(0, 10 - wiggle);
-            ctx.moveTo(6, 2); ctx.lineTo(12, 8 + wiggle);
-            ctx.stroke();
-            if (enemy.variant === 'shell') {
-                ctx.strokeStyle = '#fbbf24';
-                ctx.lineWidth = 1.8;
-                ctx.beginPath();
-                ctx.arc(0, -1, 7, Math.PI, 0);
-                ctx.stroke();
+            if (SPIDER_SPRITE.complete && SPIDER_SPRITE.naturalWidth > 0) {
+                const spiderWidth = enemy.variant === 'shell' ? 82 : 72;
+                const spiderHeight = spiderWidth * (SPIDER_SPRITE.naturalHeight / SPIDER_SPRITE.naturalWidth);
+                const crawlBob = Math.abs(Math.sin(gameTick * 0.2 + enemy.phase)) * 1.2;
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.shadowColor = enemy.variant === 'shell' ? '#fbbf24' : '#ef4444';
+                ctx.shadowBlur = getShadowBlurValue(enemy.variant === 'shell' ? 10 : 6, 4, 0);
+                ctx.drawImage(SPIDER_SPRITE, -spiderWidth / 2, -spiderHeight / 2 - crawlBob, spiderWidth, spiderHeight);
             }
 
         } else if (enemy.type === 'jellyfish') {
@@ -6581,28 +7406,47 @@ function renderGame() {
             }
 
         } else if (enemy.type === 'zombie') {
-            // Zombis caricaturescos de 2.2: silueta verde fácil de
-            // reconocer, sin detalles gráficos.
             const zombieDir = enemy.vx >= 0 ? 1 : -1;
-            const zombieStep = Math.sin(gameTick * 0.12 + enemy.phase) * 3;
-            const skin = enemy.variant === 'brute' ? '#65a30d' : enemy.variant === 'lurker' ? '#86efac' : '#4ade80';
+            const zombieBob = Math.abs(Math.sin(gameTick * 0.12 + enemy.phase)) * 1.2;
+            const zombieHeight = enemy.variant === 'brute' ? 116 : 105;
+            const zombieWidth = zombieHeight * (ZOMBIE_SPRITE.naturalWidth / ZOMBIE_SPRITE.naturalHeight);
+            const feetAnchorY = 1592 / 1672;
             ctx.translate(ex + enemy.width / 2, ey + enemy.height);
             ctx.scale(zombieDir, 1);
             ctx.fillStyle = 'rgba(2,6,23,.35)'; ctx.beginPath(); ctx.ellipse(0, 2, 16, 4, 0, 0, Math.PI * 2); ctx.fill();
-            ctx.strokeStyle = '#3f3f46'; ctx.lineWidth = 5; ctx.lineCap = 'round';
-            ctx.beginPath(); ctx.moveTo(-5, -8); ctx.lineTo(-7 + zombieStep, 0); ctx.moveTo(5, -8); ctx.lineTo(8 - zombieStep, 0); ctx.stroke();
-            ctx.fillStyle = enemy.variant === 'brute' ? '#7c2d12' : '#4338ca';
-            traceRoundedRect(ctx, -9, -21, 18, 15, 4); ctx.fill();
-            ctx.strokeStyle = skin; ctx.lineWidth = 5;
-            ctx.beginPath(); ctx.moveTo(-7, -18); ctx.lineTo(-15, -12 + zombieStep); ctx.moveTo(7, -18); ctx.lineTo(15, -12 - zombieStep); ctx.stroke();
-            ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(0, -27, enemy.variant === 'brute' ? 10 : 9, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#f8fafc'; ctx.beginPath(); ctx.arc(-3.4, -29, 2.5, 0, Math.PI * 2); ctx.arc(3.8, -29, 2.5, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#312e81'; ctx.beginPath(); ctx.arc(-3, -28.6, 1.2, 0, Math.PI * 2); ctx.arc(4.2, -28.6, 1.2, 0, Math.PI * 2); ctx.fill();
-            ctx.strokeStyle = '#365314'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-3, -23); ctx.lineTo(4, -23); ctx.stroke();
-            if (enemy.variant === 'brute') {
-                ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 2; ctx.strokeRect(-10, -22, 20, 17);
+            if (ZOMBIE_SPRITE.complete && ZOMBIE_SPRITE.naturalWidth > 0) {
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(
+                    ZOMBIE_SPRITE,
+                    -zombieWidth / 2,
+                    -zombieHeight * feetAnchorY - zombieBob,
+                    zombieWidth,
+                    zombieHeight
+                );
             }
 
+        } else if (enemy.type === 'dog_minion') {
+            const dir = enemy.vx >= 0 ? 1 : -1;
+            ctx.translate(ex + enemy.width / 2, ey + enemy.height / 2);
+            ctx.scale(dir, 1);
+            ctx.fillStyle = 'rgba(2,6,23,.35)';
+            ctx.beginPath(); ctx.ellipse(0, enemy.height / 2 + 2, enemy.width * .55, 4, 0, 0, Math.PI * 2); ctx.fill();
+            const image = DRAGON_WORLD_ENEMY_SPRITES[enemy.spriteIndex - 1];
+            if (image?.complete && image.naturalWidth) {
+                const size = 92 + enemy.spriteIndex * 6;
+                ctx.shadowColor = ['#f97316', '#a855f7', '#ef4444', '#22d3ee', '#facc15'][enemy.spriteIndex - 1];
+                ctx.shadowBlur = getShadowBlurValue(12, 6, 0);
+                ctx.drawImage(image, -size / 2, -size / 2, size, size);
+            }
+            if (enemy.activated && enemy.abilityCooldown > 0 && enemy.abilityCooldown <= 30) {
+                const charge = 1 - enemy.abilityCooldown / 30;
+                ctx.globalAlpha = .45 + charge * .45;
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath(); ctx.arc(0, 0, 38 + charge * 8, 0, Math.PI * 2); ctx.stroke();
+                ctx.globalAlpha = 1;
+            }
         } else if (enemy.type === 'ghost') {
             // Fantasmas del Bosque (Nivel 2.1)
             ctx.save();
@@ -6709,14 +7553,42 @@ function renderGame() {
         ctx.restore();
     });
 
+    dragonEnemyProjectiles.forEach(power => {
+        if (!isOnScreen(power.x, power.width, 80)) return;
+        const colors = ['#f97316', '#a855f7', '#ef4444', '#22d3ee', '#facc15'];
+        const color = colors[power.kind - 1];
+        const x = power.x - cameraX + power.width / 2;
+        const y = power.y + power.height / 2;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(gameTick * .12 * (power.kind % 2 ? 1 : -1));
+        ctx.shadowColor = color;
+        ctx.shadowBlur = getShadowBlurValue(16, 8, 0);
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(0, 0, 12 + Math.sin(gameTick * .15) * 3, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+    });
+
     // Dibujado del Boss: ¡Firulais el Perro Negro Gigante de Ojos Rojos! (Nivel 6)
-    if (currentLevel === 6 && boss.active) {
+    if (currentLevel === 6 && levelSixSection === 2 && boss.active) {
         let bx = boss.x - cameraX;
         let by = boss.y;
 
         if (boss.hp > 0) {
             ctx.save();
-            
+            const firulaisPose = boss.hurtTimer > 0
+                ? 'hurt'
+                : !boss.grounded
+                    ? 'jump'
+                    : boss.attackTimer > 0
+                        ? 'attack'
+                        : 'idle';
+            const firulaisSprite = FIRULAIS_ACTION_SPRITES[firulaisPose];
+
+            // Respaldo geométrico sólo durante el instante en que el PNG aún no cargó.
+            if (!firulaisSprite?.complete || !firulaisSprite.naturalWidth) {
             ctx.fillStyle = 'rgba(0,0,0,0.4)';
             ctx.beginPath();
             ctx.ellipse(bx + 40, by + 95, 35, 6, 0, 0, Math.PI * 2);
@@ -6778,13 +7650,53 @@ function renderGame() {
                 ctx.fillRect(bx + 10, by + 85, 18, 15 + step);
                 ctx.fillRect(bx + 52, by + 85, 18, 15 - step);
             }
+            }
 
-            // Barra de salud del Boss
-            let hpPercent = boss.hp / boss.maxHp;
-            ctx.fillStyle = '#44403c';
-            ctx.fillRect(bx + 10, by - 16, 60, 6);
-            ctx.fillStyle = '#ef4444';
-            ctx.fillRect(bx + 10, by - 16, 60 * hpPercent, 6);
+            if (firulaisSprite?.complete && firulaisSprite.naturalWidth) {
+                const visualWidth = firulaisPose === 'hurt' ? 230 : firulaisPose === 'attack' ? 220 : 205;
+                const visualHeight = visualWidth * firulaisSprite.naturalHeight / firulaisSprite.naturalWidth;
+                const visibleBottomRatio = firulaisPose === 'hurt'
+                    ? 843 / 1024
+                    : firulaisPose === 'jump'
+                        ? 791 / 1024
+                        : 857 / 1024;
+                ctx.save();
+                ctx.translate(bx + boss.width / 2, by + boss.height);
+                // perroataque.png mira hacia la izquierda de origen: al atacar
+                // hacia la derecha se refleja, independientemente de hacia dónde caminaba.
+                const firulaisScaleX = firulaisPose === 'attack'
+                    ? (boss.attackFacing > 0 ? -1 : 1)
+                    : (boss.vx >= 0 ? 1 : -1);
+                ctx.scale(firulaisScaleX, 1);
+                ctx.shadowColor = '#ef4444';
+                ctx.shadowBlur = getShadowBlurValue(24, 12, 0);
+                if (boss.hurtTimer > 0 && Math.floor(gameTick / 4) % 2 === 0) ctx.globalAlpha = .55;
+                ctx.drawImage(firulaisSprite, -visualWidth / 2, -visualHeight * visibleBottomRatio, visualWidth, visualHeight);
+                ctx.restore();
+            }
+
+            // Tres barras fijas: cada una representa una etapa de tres
+            // impactos y se vacían de derecha a izquierda.
+            const currentStage = Math.min(FIRULAIS_HEALTH_BARS, FIRULAIS_HEALTH_BARS - Math.ceil(Math.max(0, boss.hp) / FIRULAIS_HP_PER_BAR) + 1);
+            ctx.fillStyle = 'rgba(15,5,12,.94)';
+            traceRoundedRect(ctx, 190, 16, 420, 55, 13); ctx.fill();
+            ctx.strokeStyle = '#f87171'; ctx.lineWidth = 2;
+            traceRoundedRect(ctx, 191, 17, 418, 53, 12); ctx.stroke();
+            const healthBarWidth = 116;
+            const healthBarGap = 11;
+            for (let barIndex = 0; barIndex < FIRULAIS_HEALTH_BARS; barIndex++) {
+                const barX = 215 + barIndex * (healthBarWidth + healthBarGap);
+                const barHealth = Math.max(0, Math.min(FIRULAIS_HP_PER_BAR, boss.hp - barIndex * FIRULAIS_HP_PER_BAR));
+                const barPercent = barHealth / FIRULAIS_HP_PER_BAR;
+                ctx.fillStyle = '#3f1721';
+                traceRoundedRect(ctx, barX, 48, healthBarWidth, 12, 6); ctx.fill();
+                if (barPercent > 0) {
+                    ctx.fillStyle = barIndex === 0 ? '#f97316' : barIndex === 1 ? '#ef4444' : '#dc2626';
+                    traceRoundedRect(ctx, barX, 48, healthBarWidth * barPercent, 12, 6); ctx.fill();
+                }
+            }
+            ctx.fillStyle = '#fff1f2'; ctx.font = 'bold 14px Fredoka'; ctx.textAlign = 'center';
+            ctx.fillText(`FIRULAIS · FASE ${currentStage}/${FIRULAIS_HEALTH_BARS}`, 400, 37);
 
             ctx.restore();
         }
@@ -6809,9 +7721,57 @@ function renderGame() {
     }
 
     // Familia Secuestrada: Mamá gata, Papá gato y la Hermana pequeña
-    if (currentLevel === 6) {
-        let px = princess.x - cameraX;
+    if (currentLevel === 6 && levelSixSection === 2) {
+        const reunionStill = ['approach', 'family_dialog', 'miau_dialog'].includes(familyRescueSequence.phase);
+        const familyState = princess.jailed ? 'triste' : reunionStill ? 'feliz' : 'caminando';
+        const familyWorldX = princess.jailed ? princess.x : familyRescueSequence.x;
+        let px = familyWorldX - cameraX;
         ctx.save();
+        ctx.globalAlpha = princess.jailed ? 1 : familyRescueSequence.alpha;
+        const familyImage = FAMILY_SPRITES[familyState];
+        const familyWidth = familyState === 'caminando' ? 175 : 150;
+        const visibleBottomRatio = familyState === 'caminando' ? 0.9 : 0.86;
+        const visibleSourceHeight = familyImage?.naturalHeight
+            ? familyImage.naturalHeight * visibleBottomRatio
+            : 0;
+        const familyHeight = familyImage?.naturalWidth
+            ? familyWidth * visibleSourceHeight / familyImage.naturalWidth
+            : 110;
+        // El PNG caminando conserva aire transparente bajo las patas. Su caja
+        // tocaba el piso, pero los gatos visibles quedaban flotando sobre él.
+        const familyGroundY = princess.jailed ? 378 : 402;
+        const familyY = familyGroundY - familyHeight;
+        if (familyImage?.complete && familyImage.naturalWidth) {
+            ctx.drawImage(
+                familyImage,
+                0,
+                0,
+                familyImage.naturalWidth,
+                visibleSourceHeight,
+                px - familyWidth / 2,
+                familyY,
+                familyWidth,
+                familyHeight
+            );
+        }
+
+        if (princess.jailed) {
+            ctx.shadowColor = '#facc15';
+            ctx.shadowBlur = 12;
+            ctx.strokeStyle = '#facc15';
+            ctx.lineWidth = 5;
+            ctx.fillStyle = 'rgba(15,23,42,.14)';
+            ctx.fillRect(px - 82, familyY - 10, 164, familyHeight + 16);
+            ctx.strokeRect(px - 82, familyY - 10, 164, familyHeight + 16);
+            for (let bar = -64; bar <= 64; bar += 22) {
+                ctx.beginPath(); ctx.moveTo(px + bar, familyY - 8); ctx.lineTo(px + bar, 382); ctx.stroke();
+            }
+            ctx.fillStyle = '#fecaca'; ctx.font = 'bold 11px Fredoka'; ctx.textAlign = 'center';
+            ctx.fillText('¡RESISTAN!', px, familyY - 19);
+        }
+
+        // Se conserva el dibujo anterior únicamente como respaldo si faltara un recurso.
+        if (!familyImage?.complete || !familyImage.naturalWidth) {
         
         // 1. PAPÁ GATITO (Gris con bigote gracioso)
         ctx.fillStyle = '#94a3b8';
@@ -6886,6 +7846,7 @@ function renderGame() {
             ctx.fillText('¡Ayuda!', px + 22, princess.y - 14);
         }
 
+        }
         ctx.restore();
     }
 
@@ -6901,18 +7862,50 @@ function renderGame() {
     } else if (player.hiddenInHole) {
         ctx.globalAlpha = .24;
     }
-    drawCat(
-        ctx,
-        player.x,
-        player.y,
-        player.width,
-        player.height,
-        player.direction,
-        player.isMoving,
-        !player.grounded,
-        gameTick,
-        finalPortalSequence.active ? 0 : player.invulnerable
-    );
+    const ridingDragon = ((currentLevel === 5 && levelFiveSection === 3) || (currentLevel === 6 && levelSixSection === 1)) && !!dragonBoss?.mounted;
+    if (!ridingDragon) {
+        drawCat(
+            ctx,
+            player.x,
+            player.y,
+            player.width,
+            player.height,
+            player.direction,
+            player.isMoving,
+            !player.grounded,
+            gameTick,
+            finalPortalSequence.active ? 0 : player.invulnerable
+        );
+    }
+
+    if (familyRescueSequence.active && (familyRescueSequence.phase === 'family_dialog' || familyRescueSequence.phase === 'miau_dialog')) {
+        const familySpeaking = familyRescueSequence.phase === 'family_dialog';
+        const speakerWorldX = familySpeaking ? familyRescueSequence.x : player.x + player.width / 2;
+        const bubbleX = Math.max(155, Math.min(canvas.width - 155, speakerWorldX - cameraX));
+        const bubbleY = familySpeaking ? 150 : Math.max(105, player.y - 72);
+        const lineOne = familySpeaking ? '¡Miau! Sabíamos que vendrías.' : 'Nunca iba a dejarlos atrás.';
+        const lineTwo = familySpeaking ? '¡Nuestra familia está junta otra vez!' : 'Ahora volvamos a casa, todos juntos.';
+        ctx.save();
+        ctx.fillStyle = 'rgba(15,23,42,.95)';
+        traceRoundedRect(ctx, bubbleX - 145, bubbleY - 38, 290, 64, 14); ctx.fill();
+        ctx.strokeStyle = familySpeaking ? '#fbbf24' : '#60a5fa';
+        ctx.lineWidth = 3;
+        traceRoundedRect(ctx, bubbleX - 145, bubbleY - 38, 290, 64, 14); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(bubbleX - 10, bubbleY + 26);
+        ctx.lineTo(bubbleX + 4, bubbleY + 39);
+        ctx.lineTo(bubbleX + 18, bubbleY + 26);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 14px Fredoka';
+        ctx.fillText(lineOne, bubbleX, bubbleY - 12);
+        ctx.font = '12px Fredoka';
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillText(lineTwo, bubbleX, bubbleY + 9);
+        ctx.restore();
+    }
     if (player.zombieStunTimer > 0) {
         const secondsLeft = Math.max(1, Math.ceil(player.zombieStunTimer / 60));
         const labelX = player.x + player.width / 2 - cameraX;
@@ -7076,22 +8069,17 @@ function loop(timestamp) {
 function resizeCanvas() {
     canvas.width = 800;
     canvas.height = 450;
-    cutsceneCanvas.width = 800;
-    cutsceneCanvas.height = 450;
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
-    cutsceneCtx.imageSmoothingEnabled = true;
-    if (cutsceneActive) {
-        const elapsed = cutsceneStartTime === null
-            ? 0
-            : Math.min(CUTSCENE_DURATION, performance.now() - cutsceneStartTime);
-        renderCutsceneFrameSafely(elapsed);
-    }
 }
 
 document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
         resetInputState();
+        if (cutsceneActive && !cutsceneVideo.paused) {
+            cutscenePausedByVisibility = true;
+            cutsceneVideo.pause();
+        }
         if (animationFrameId) {
             cancelAnimationFrame(animationFrameId);
             animationFrameId = null;
@@ -7100,6 +8088,11 @@ document.addEventListener('visibilitychange', () => {
         lastTime = performance.now();
         physicsAccumulator = 0;
         return;
+    }
+
+    if (cutscenePausedByVisibility && cutsceneActive) {
+        cutscenePausedByVisibility = false;
+        cutsceneVideo.play().catch(() => {});
     }
 
     if (suspendedByVisibility && gameActive && !isPaused && !animationFrameId) {
@@ -7128,4 +8121,12 @@ window.onload = () => {
     populateDeveloperLevelOptions();
     updateShopUI();
     updateFullscreenButtons();
+
+    // Acceso directo para probar secciones concretas, por ejemplo
+    // http://127.0.0.1:8000/?level=4.2
+    const directLevel = new URLSearchParams(window.location.search).get('level');
+    if (directLevel && [...ui.devLevelSelect.options].some(option => option.value === directLevel)) {
+        ui.devLevelSelect.value = directLevel;
+        startGame({ startLevel: directLevel, useShopLoadout: false, consumeShopLoadout: false });
+    }
 };

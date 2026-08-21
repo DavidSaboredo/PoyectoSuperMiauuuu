@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Super Miau</string>
+    <string name="title_activity_main">Super Miau</string>
+    <string name="package_name">com.supermiau.juego</string>
+    <string name="custom_url_scheme">com.supermiau.juego</string>
+</resources>

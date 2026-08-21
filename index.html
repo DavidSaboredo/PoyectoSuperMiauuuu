@@ -8,23 +8,16 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Super Miau">
-    <title>Super Miau · V23</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="dns-prefetch" href="//cdn.tailwindcss.com">
-    <!-- Google Fonts: Fredoka -->
-    <link rel="dns-prefetch" href="//fonts.googleapis.com">
-    <link rel="dns-prefetch" href="//fonts.gstatic.com">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
+    <title>Super Miau</title>
+    <!-- Tailwind compilado localmente: la aplicación no necesita Internet. -->
+    <link rel="stylesheet" href="css/tailwind.generated.css">
     <!-- Hoja de estilos principal: define la apariencia retro, la interfaz y los paneles del juego. -->
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="bg-slate-950 text-white min-h-screen flex flex-col justify-between overflow-x-hidden relative">
 
     <script src="js/config.js"></script>
-    <script src="js/data/levels.js"></script>
+    <script src="js/data/levels.js?v=24.10"></script>
     <script src="js/render/effects.js"></script>
     <script src="js/render/backgrounds.js"></script>
     <script src="js/render/entities.js"></script>
@@ -32,27 +25,27 @@
     <script src="js/audio.js"></script>
 
     <!-- HEADER & INTERFACE HUD -->
-    <header class="w-full bg-slate-900/85 backdrop-blur-md border-b border-indigo-500/30 py-3 px-4 md:px-6 flex flex-col gap-3 md:flex-row md:justify-between md:items-center z-10 select-none">
-        <div class="flex w-full items-center justify-center gap-3 md:w-auto md:justify-start">
-            <img src="assets/sprites/super-miau-quieto.png" alt="Super Miau naranja con capa roja" class="h-14 w-14 object-contain drop-shadow-lg">
-            <div>
-                <h1 class="text-xl md:text-2xl font-bold bg-gradient-to-r from-orange-400 via-pink-500 to-yellow-300 bg-clip-text text-transparent">
+    <header class="w-full bg-slate-900/85 backdrop-blur-md border-b border-indigo-500/30 py-3 px-4 md:px-6 flex flex-col gap-3 md:flex-row md:flex-nowrap md:justify-between md:items-center z-10 select-none">
+        <div class="flex w-full min-w-0 flex-wrap items-center justify-center gap-3 md:flex-1 md:flex-nowrap md:justify-start">
+            <img src="assets/sprites/super-miau-quieto.png" alt="Super Miau naranja con capa roja" class="h-14 w-14 shrink-0 object-contain drop-shadow-lg">
+            <div class="shrink-0 text-left">
+                <h1 class="whitespace-nowrap text-xl md:text-2xl font-bold bg-gradient-to-r from-orange-400 via-pink-500 to-yellow-300 bg-clip-text text-transparent">
                     Super Miau
                 </h1>
-                <p class="text-xs text-indigo-300">¡Rescate en el Parque Sureño!</p>
+                <p class="whitespace-nowrap text-sm md:text-base text-indigo-300">¡Rescate en el Parque Sureño!</p>
             </div>
             <span class="png-v3-badge">MUNDO 3 COMPLETO · V23</span>
         </div>
         
-        <div class="flex w-full flex-wrap items-center justify-center gap-2 md:gap-3 text-xs md:text-sm md:justify-end">
+        <div class="flex w-full min-w-0 flex-wrap items-center justify-center gap-2 md:flex-1 md:gap-3 text-sm md:text-base md:justify-end">
             <!-- Indicador de Nivel -->
             <div id="levelBadge" class="hud-pill max-w-full bg-indigo-950 px-3 py-1 rounded-full border border-indigo-500/30 text-indigo-300 font-bold">
                 🐾 <span id="headerLevel" class="text-white">1</span>/7 · <span id="headerLevelName" class="hud-level-name text-yellow-200">Parque Sureño</span>
             </div>
-            <!-- Oxígeno (Nivel 5) -->
-            <div id="oxygenBadge" class="hud-pill hidden bg-cyan-950 px-3 py-1 rounded-full border border-cyan-500/30 text-cyan-300 font-bold items-center gap-1">
-                <span>🫧 Aire:</span>
-                <div class="w-16 bg-slate-800 h-2 rounded-full overflow-hidden">
+            <!-- Oxígeno (Nivel 4) -->
+            <div id="oxygenBadge" class="hud-pill oxygen-badge hidden bg-cyan-950 px-3 py-2 rounded-xl border-2 border-cyan-300 text-cyan-100 font-extrabold items-center gap-2">
+                <span class="oxygen-label">🫧 OXÍGENO</span>
+                <div class="oxygen-track bg-slate-950 rounded-full overflow-hidden">
                     <div id="oxygenBar" class="bg-cyan-400 h-full w-full transition-all duration-100"></div>
                 </div>
             </div>
@@ -97,7 +90,7 @@
     </header>
 
     <!-- MAIN GAME AREA -->
-    <main class="flex-grow flex flex-col items-center justify-center p-3 md:p-6 z-10 w-full max-w-5xl mx-auto relative">
+    <main class="flex-grow flex flex-col items-center justify-center p-3 md:p-6 z-10 w-full max-w-7xl mx-auto relative">
         <div id="debugHud" class="hidden absolute left-2 right-2 top-2 z-40 rounded-2xl border border-cyan-500/30 bg-slate-950/88 px-3 py-2 text-[11px] text-cyan-100 shadow-lg shadow-cyan-900/30 backdrop-blur-sm md:left-auto md:right-3 md:top-3 md:min-w-[220px]">
             <div class="mb-1 flex items-center justify-between gap-3">
                 <span class="font-extrabold tracking-wide text-cyan-300">DEBUG HUD</span>
@@ -117,8 +110,8 @@
         
         <!-- PANTALLA DE INICIO (OVERLAY) -->
         <div id="startScreen" class="absolute inset-0 bg-slate-950/95 z-20 flex flex-col items-center justify-start p-4 md:p-6 text-center rounded-3xl overflow-y-auto">
-            <span class="png-v3-badge mb-2">VERSIÓN V23 · NIVELES 3.1, 3.2 Y 3.3 · 8 POSES PNG</span>
-            <h2 class="text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-pink-500 to-yellow-300 mb-2">
+            <span class="start-version png-v3-badge mb-2">NIVELES 3.1, 3.2 Y 3.3 · 8 POSES PNG</span>
+            <h2 class="start-title text-4xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-pink-500 to-yellow-300 mb-3">
                 SUPER MIAU
             </h2>
             <div class="start-cat-stage" aria-label="Vista previa del nuevo Super Miau">
@@ -127,71 +120,76 @@
             </div>
             
             <!-- Contenedor con la historia/lore -->
-            <div class="bg-slate-900/90 border-2 border-indigo-500/30 rounded-2xl p-4 md:p-5 mb-4 max-w-2xl w-full text-left text-sm md:text-base text-indigo-100 space-y-3 shadow-inner shadow-black/40 overflow-y-auto max-h-[240px] md:max-h-[280px] scroll-story">
-                <p class="font-bold text-yellow-300 text-center text-base border-b border-indigo-500/20 pb-2">📖 SUPER MIAU Y EL RESCATE DE SU FAMILIA</p>
-                <p class="leading-relaxed md:leading-7">
+            <div class="start-story bg-slate-900/90 border-2 border-indigo-500/30 rounded-2xl p-5 md:p-7 mb-5 max-w-4xl w-full shrink-0 text-left text-base md:text-xl text-indigo-100 space-y-4 shadow-inner shadow-black/40">
+                <p class="font-bold text-yellow-300 text-center text-xl md:text-2xl border-b border-indigo-500/20 pb-3">📖 SUPER MIAU Y EL RESCATE DE SU FAMILIA</p>
+                <p class="leading-relaxed md:leading-8">
                     En una gran ciudad llena de luces brillantes, edificios altos y calles muy transitadas, vivía una familia de gatitos. Se refugiaban dentro de una caja de cartón en el <b>Parque Sureño</b>. Allí vivían papá gato, mamá gata, la pequeña gatita y su hermano menor, un valiente gatito llamado <b>Miau</b>.
                 </p>
-                <p class="leading-relaxed md:leading-7">
+                <p class="leading-relaxed md:leading-8">
                     Una noche, una tormenta cubrió el cielo. Un enorme rayo iluminó la oscuridad y cayó sobre un viejo árbol. <b>¡CRAAASH!</b> El impacto abrió un misterioso portal de luces azules y violetas, de donde surgió un gigantesco perro negro de ojos rojos y sonrisa malvada: el temible <b>Firulais</b>.
                 </p>
-                <p class="leading-relaxed md:leading-7">
+                <p class="leading-relaxed md:leading-8">
                     El perro secuestró a la pequeña gatita y saltó al portal. Desesperados, mamá y papá gato se lanzaron detrás... ¡pero el perro los atrapó a todos! Miau, escondido detrás de unos arbustos, reunió valor: <b>—¡No los abandonaré! ¡Voy a salvarlos!</b> Y saltó al portal segundos antes de que se cerrara. ¡Conviértete en <b>SUPER MIAU</b> y rescata a tu familia!
                 </p>
             </div>
 
-            <div class="bg-slate-900/50 border border-slate-800 rounded-xl px-3 py-3 mb-4 max-w-xl w-full text-xs text-indigo-300 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-center">
-                <span class="rounded-lg bg-slate-950/40 px-3 py-1">Moverse: ⬅️ ➡️ / A D</span>
-                <span class="rounded-lg bg-slate-950/40 px-3 py-1">Saltar: ⬆️ / W / Espacio</span>
-                <span class="rounded-lg bg-slate-950/40 px-3 py-1">Maullido: F / Shift ⚡</span>
-                <span class="rounded-lg bg-slate-950/40 px-3 py-1">Bajar en agua: ⬇️ / S 🫧</span>
-                <span class="rounded-lg bg-slate-950/40 px-3 py-1">Pantalla completa: ⛶</span>
+            <div class="start-controls bg-slate-900/50 border border-slate-800 rounded-2xl px-4 py-4 mb-5 max-w-4xl w-full text-sm md:text-base text-indigo-200 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
+                <span class="rounded-xl bg-slate-950/40 px-4 py-2">Moverse: ⬅️ ➡️ / A D</span>
+                <span class="rounded-xl bg-slate-950/40 px-4 py-2">Saltar: ⬆️ / W / Espacio</span>
+                <span class="rounded-xl bg-slate-950/40 px-4 py-2">Maullido: F / Shift ⚡</span>
+                <span class="rounded-xl bg-slate-950/40 px-4 py-2">Bajar en agua: ⬇️ / S 🫧</span>
+                <span class="rounded-xl bg-slate-950/40 px-4 py-2">Pantalla completa: ⛶</span>
             </div>
 
-            <div class="mb-4 flex w-full max-w-2xl flex-wrap items-center justify-center gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-950/20 px-4 py-3 text-[11px] font-bold text-emerald-200">
+            <div class="start-tips mb-5 flex w-full max-w-4xl flex-wrap items-center justify-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-950/20 px-5 py-4 text-sm md:text-base font-bold text-emerald-200">
                 <span class="rounded-full bg-orange-950/70 border border-orange-400/30 px-3 py-1 text-orange-200">Niveles 1.1 · 1.2 · 1.3</span>
                 <span class="rounded-full bg-slate-950/50 px-3 py-1">Mejor con sonido activado</span>
                 <span class="rounded-full bg-slate-950/50 px-3 py-1">Pantalla completa recomendada</span>
             </div>
 
             <!-- Indicador de huellas totales en el menú principal -->
-            <div class="mb-4 flex w-full max-w-sm items-center justify-center gap-2 bg-slate-900/80 px-4 py-2 rounded-xl border border-yellow-500/30 text-yellow-300 font-bold text-sm">
+            <div class="start-wallet mb-5 flex w-full max-w-md items-center justify-center gap-2 bg-slate-900/80 px-5 py-3 rounded-xl border border-yellow-500/30 text-yellow-300 font-bold text-base md:text-lg">
                 <span>🐾 Huellas de luz:</span>
                 <span id="startScreenWallet">0</span>
             </div>
 
-            <div id="developerPanel" class="mb-4 hidden w-full max-w-xl rounded-2xl border border-cyan-500/25 bg-slate-900/70 p-4 text-left shadow-inner shadow-black/30">
-                <div class="mb-2 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <h3 class="text-sm font-extrabold tracking-wide text-cyan-300">Modo Desarrollador</h3>
-                    <span class="rounded-full bg-slate-950/80 px-2 py-1 text-[10px] font-bold text-cyan-200">Probar niveles</span>
-                </div>
-                <p class="mb-3 text-[11px] text-slate-300">
-                    Entra directo a cualquier mundo para ajustar saltos, enemigos, ritmo y rendimiento sin recorrer toda la aventura.
-                </p>
-                <div class="flex flex-col gap-3 lg:flex-row lg:items-end">
-                    <label class="flex-1">
-                        <span class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-cyan-200">Nivel de prueba</span>
-                        <select id="devLevelSelect" class="w-full rounded-xl border border-slate-700 bg-slate-950/90 px-3 py-2 text-sm font-bold text-white outline-none transition focus:border-cyan-400">
-                        </select>
-                    </label>
-                    <label class="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-2 text-xs font-bold text-slate-200 lg:self-center">
-                        <input id="devUseShopUpgrades" type="checkbox" class="h-4 w-4 accent-cyan-400">
-                        <span>Usar mejoras de tienda</span>
-                    </label>
-                    <button onclick="startDeveloperLevel()" class="w-full lg:w-auto rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-extrabold text-slate-950 shadow-lg shadow-cyan-500/20 transition hover:bg-cyan-400 active:scale-95">
-                        Probar nivel directo
-                    </button>
+            <div id="developerPanel" class="developer-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="developerPanelTitle">
+                <div class="developer-card w-full max-w-xl rounded-2xl border border-cyan-500/25 bg-slate-900 p-4 text-left shadow-2xl shadow-black/40">
+                    <div class="mb-2 flex items-center justify-between gap-3">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h3 id="developerPanelTitle" class="text-sm font-extrabold tracking-wide text-cyan-300">Modo Desarrollador</h3>
+                            <span class="rounded-full bg-slate-950/80 px-2 py-1 text-[10px] font-bold text-cyan-200">Probar niveles</span>
+                        </div>
+                        <button type="button" onclick="toggleDeveloperPanel(false)" class="developer-close" aria-label="Cerrar probador de niveles">×</button>
+                    </div>
+                    <p class="mb-3 text-[11px] text-slate-300">
+                        Entra directo a cualquier mundo para ajustar saltos, enemigos, ritmo y rendimiento sin recorrer toda la aventura.
+                    </p>
+                    <div class="flex flex-col gap-3 lg:flex-row lg:items-end">
+                        <label class="flex-1">
+                            <span class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-cyan-200">Nivel de prueba</span>
+                            <select id="devLevelSelect" class="w-full rounded-xl border border-slate-700 bg-slate-950/90 px-3 py-2 text-sm font-bold text-white outline-none transition focus:border-cyan-400">
+                            </select>
+                        </label>
+                        <label class="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-2 text-xs font-bold text-slate-200 lg:self-center">
+                            <input id="devUseShopUpgrades" type="checkbox" class="h-4 w-4 accent-cyan-400">
+                            <span>Usar mejoras de tienda</span>
+                        </label>
+                        <button onclick="startDeveloperLevel()" class="w-full lg:w-auto rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-extrabold text-slate-950 shadow-lg shadow-cyan-500/20 transition hover:bg-cyan-400 active:scale-95">
+                            Probar nivel directo
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <div class="flex w-full max-w-xl flex-col gap-3 sm:flex-row">
-                <button onclick="beginAdventure()" class="w-full sm:flex-1 bg-gradient-to-r from-orange-500 to-yellow-400 hover:from-orange-400 hover:to-yellow-300 text-slate-950 font-extrabold text-lg py-3 px-8 rounded-2xl shadow-lg shadow-orange-500/30 transform transition active:scale-95">
+            <div class="start-actions flex w-full max-w-4xl flex-col gap-4 sm:flex-row">
+                <button onclick="beginAdventure()" class="w-full sm:flex-1 bg-gradient-to-r from-orange-500 to-yellow-400 hover:from-orange-400 hover:to-yellow-300 text-slate-950 font-extrabold text-xl py-4 px-8 rounded-2xl shadow-lg shadow-orange-500/30 transform transition active:scale-95">
                     Ver historia y jugar 🎬
                 </button>
-                <button onclick="openShop()" class="w-full sm:flex-1 bg-slate-800 hover:bg-slate-700 text-yellow-300 font-extrabold text-lg py-3 px-8 rounded-2xl border-2 border-yellow-500/40 shadow-lg shadow-yellow-500/10 transform transition active:scale-95 flex items-center justify-center gap-2">
+                <button onclick="openShop()" class="w-full sm:flex-1 bg-slate-800 hover:bg-slate-700 text-yellow-300 font-extrabold text-xl py-4 px-8 rounded-2xl border-2 border-yellow-500/40 shadow-lg shadow-yellow-500/10 transform transition active:scale-95 flex items-center justify-center gap-2">
                     🎒 Tienda
                 </button>
-                <button onclick="showHelpOverlay()" class="w-full sm:flex-1 bg-slate-900 hover:bg-slate-800 text-slate-200 font-extrabold text-lg py-3 px-8 rounded-2xl border border-slate-700 shadow-lg shadow-black/10 transform transition active:scale-95 flex items-center justify-center gap-2">
+                <button onclick="showHelpOverlay()" class="w-full sm:flex-1 bg-slate-900 hover:bg-slate-800 text-slate-200 font-extrabold text-xl py-4 px-8 rounded-2xl border border-slate-700 shadow-lg shadow-black/10 transform transition active:scale-95 flex items-center justify-center gap-2">
                     ❔ Ayuda
                 </button>
             </div>
@@ -210,13 +208,9 @@
             </div>
 
             <div class="cutscene-frame">
-                <canvas id="cutsceneCanvas" width="800" height="450" aria-label="Cinemática de la familia gatuna y el portal dimensional"></canvas>
+                <video id="cutsceneVideo" class="cutscene-video" preload="auto" playsinline aria-label="Cinemática de la familia gatuna y el portal dimensional"></video>
                 <div class="absolute z-[2] left-[4%] top-[4%] bg-slate-950/75 border border-indigo-400/40 rounded-full px-3 py-1 text-[9px] md:text-xs font-bold text-indigo-100 tracking-wide">
-                    SUPER MIAU · ORIGEN DE LA AVENTURA
-                </div>
-                <div id="cutsceneCaption" class="cutscene-caption">
-                    <p id="cutsceneSpeaker" class="text-[9px] md:text-[11px] font-extrabold tracking-[0.2em] text-yellow-300 mb-1">NARRADOR</p>
-                    <p id="cutsceneText" class="text-[11px] leading-snug md:text-base md:leading-relaxed text-white font-bold">En el Parque Sureño vivía una familia de gatitos.</p>
+                    HISTORIA DE SUPER MIAU
                 </div>
             </div>
 
@@ -322,6 +316,19 @@
         </div>
 
         <!-- OVERLAY DE FIN DE JUEGO / VICTORIA / TRANSICIÓN -->
+        <div id="dragonPuzzleOverlay" class="absolute inset-0 z-30 hidden items-center justify-center rounded-3xl bg-slate-950/90 p-5 text-center" role="dialog" aria-modal="true" aria-labelledby="dragonPuzzleTitle">
+            <form class="w-full max-w-md rounded-3xl border border-amber-400/40 bg-slate-900 p-6 shadow-2xl shadow-amber-500/20" onsubmit="submitDragonPuzzle(event)">
+                <div class="mb-2 text-6xl" aria-hidden="true">🐉🔐</div>
+                <p class="mb-1 text-xs font-bold uppercase tracking-[0.25em] text-amber-300">Cerradura de Firulais</p>
+                <h3 id="dragonPuzzleTitle" class="mb-3 text-3xl font-extrabold text-white">Descifrá la combinación</h3>
+                <p id="dragonPuzzleQuestion" class="mb-5 whitespace-pre-line rounded-2xl bg-slate-950/70 p-4 text-lg font-bold leading-relaxed text-indigo-100"></p>
+                <label for="dragonPuzzleAnswer" class="mb-2 block text-sm font-bold text-amber-200">Combinación de 4 números</label>
+                <input id="dragonPuzzleAnswer" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" class="w-44 rounded-2xl border-2 border-amber-400/60 bg-slate-950 px-4 py-3 text-center text-3xl font-extrabold tracking-[0.3em] text-amber-300 outline-none focus:border-amber-300 focus:ring-4 focus:ring-amber-400/20" aria-describedby="dragonPuzzleFeedback">
+                <p id="dragonPuzzleFeedback" class="mt-3 min-h-6 text-sm font-bold text-indigo-200" aria-live="polite">Usá la llave y resolvé el acertijo.</p>
+                <button type="submit" class="mt-4 w-full rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 px-6 py-3 text-lg font-extrabold text-slate-950 transition active:scale-95">Probar combinación 🔑</button>
+            </form>
+        </div>
+
         <div id="gameOverlay" class="absolute inset-0 bg-slate-950/90 z-20 flex flex-col items-center justify-center p-6 text-center hidden rounded-3xl">
             <span id="overlayEmoji" class="text-7xl mb-4">🏆</span>
             <h3 id="overlayTitle" class="text-4xl md:text-5xl font-extrabold text-yellow-300 mb-2">¡Nivel Completado!</h3>
@@ -346,7 +353,7 @@
                         Créditos Finales
                     </h3>
                     <p id="creditsLead" class="max-w-2xl text-sm md:text-base text-indigo-200 leading-relaxed">
-                        Súper Miau logró cruzar el último portal antes del colapso. La grieta dimensional se cerró detrás de la familia, y esta pantalla queda lista para completar con los nombres definitivos cuando me pases el archivo.
+                        Una aventura creada por 4.º grado de la Escuela N.º 3 “Justo José de Urquiza”, con las ideas y la imaginación de todo el grupo.
                     </p>
                     <p id="creditsHint" class="text-xs md:text-sm text-emerald-200/80 transition duration-700">La aventura termina, el descanso empieza.</p>
                     <div id="creditsStoryline" class="grid w-full gap-3 text-left text-xs md:grid-cols-4 md:text-sm"></div>
@@ -355,7 +362,7 @@
                     <div id="creditsList" class="space-y-4 text-sm md:text-base text-indigo-100 transition duration-700"></div>
                 </div>
                 <p id="creditsThanks" class="max-w-2xl text-xs md:text-sm text-slate-300 transition duration-700">
-                    Esta parte queda lista para reemplazar nombres cuando me pases la lista final.
+                    Con mucho cariño para cada niño y cada niña de 4.º grado. ¡Felicitaciones por esta aventura creada entre todos!
                 </p>
                 <div class="flex flex-col gap-3 sm:flex-row">
                     <button onclick="restartFromCredits()" class="bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-bold py-3 px-8 rounded-2xl text-lg transition active:scale-95 shadow-lg shadow-emerald-500/20">
@@ -370,7 +377,7 @@
 
         <!-- CANVAS DE JUEGO CON ASPECT RATIO ADAPTABLE -->
         <div class="relative w-full flex justify-center items-center">
-            <div class="arcade-container w-full max-w-[800px] border-4 border-indigo-500/40">
+            <div class="arcade-container w-full max-w-[1000px] border-4 border-indigo-500/40">
                 <canvas id="gameCanvas" width="800" height="450" class="w-full aspect-[16/9] block"></canvas>
             </div>
         </div>
@@ -419,6 +426,6 @@
     </footer>
 
     <!-- LÓGICA COMPLETA DEL JUEGO -->
-    <script src="js/game.js"></script>
+    <script src="js/game.js?v=24.13"></script>
 </body>
 </html>

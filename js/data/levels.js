@@ -175,6 +175,157 @@ const MAP_BLUEPRINTS = {
     }
 };
 
+// La Ciudad Sumergida continúa en 4.2 con un corredor abierto diseñado
+// alrededor de corrientes y remolinos. 4.1 conserva el mapa original.
+const LEVEL_FOUR_BLUEPRINTS = {
+    1: MAP_BLUEPRINTS[5],
+    2: {
+        goalX: 5100,
+        ground: [[0, 5400]],
+        structures: [{x:520,h:72},{x:1260,h:110},{x:2080,h:82},{x:2920,h:126},{x:3780,h:92},{x:4620,h:118}],
+        platforms: [
+            {x:180,y:285,type:'stair',width:150,height:18},{x:470,y:205,type:'question'},
+            {x:820,y:300,type:'stair',width:170,height:18},{x:1120,y:165,type:'brick',width:105,height:20},
+            {x:1480,y:265,type:'stair',width:145,height:18},{x:1810,y:120,type:'question'},
+            {x:2180,y:305,type:'stair',width:180,height:18},{x:2520,y:185,type:'brick',width:120,height:20},
+            {x:2860,y:275,type:'stair',width:150,height:18},{x:3230,y:135,type:'question'},
+            {x:3560,y:300,type:'stair',width:180,height:18},{x:3920,y:178,type:'brick',width:110,height:20},
+            {x:4260,y:270,type:'stair',width:160,height:18},{x:4650,y:145,type:'question'},{x:4900,y:260,type:'stair',width:135,height:18}
+        ],
+        collectibles: [[160,245],[410,205],[690,300],[930,245],[1160,125],[1450,225],[1760,160],[2070,275],[2380,220],[2620,145],[2920,235],[3200,105],[3510,260],[3820,210],[4050,140],[4350,230],[4660,105],[4930,220]],
+        enemies: [
+            {x:720,y:180,minX:520,maxX:980,variant:'surger'},
+            {x:1660,y:230,minX:1420,maxX:1940,variant:'drifter'},
+            {x:2730,y:150,minX:2480,maxX:3100,variant:'mine'},
+            {x:3710,y:220,minX:3440,maxX:4070,variant:'surger'},
+            {x:4620,y:165,minX:4380,maxX:4960,variant:'drifter'}
+        ]
+    },
+    3: {
+        goalX: 5100,
+        ground: [[0, 5400]],
+        structures: [{x:520,h:80},{x:1280,h:115},{x:2050,h:88},{x:2860,h:125},{x:3600,h:96}],
+        platforms: [
+            {x:220,y:285,type:'stair',width:150,height:18},{x:620,y:175,type:'question'},
+            {x:980,y:300,type:'stair',width:180,height:18},{x:1420,y:150,type:'brick',width:120,height:20},
+            {x:1840,y:270,type:'stair',width:165,height:18},{x:2260,y:135,type:'question'},
+            {x:2640,y:300,type:'stair',width:180,height:18},{x:3060,y:165,type:'brick',width:125,height:20},
+            {x:3460,y:275,type:'stair',width:170,height:18},{x:3820,y:145,type:'question'},
+            {x:4100,y:305,type:'stair',width:210,height:18},{x:4620,y:290,type:'stair',width:230,height:18}
+        ],
+        collectibles: [[180,245],[520,150],[890,260],[1240,205],[1570,115],[1900,230],[2260,100],[2660,260],[3050,130],[3440,235],[3820,105],[4180,260]],
+        enemies: []
+    }
+};
+
+// La cordillera continúa en un segundo cruce sin suelo firme. Las rocas
+// marcadas como lava_stone se desprenden poco después de que Miau las pisa.
+const LEVEL_FIVE_BLUEPRINTS = {
+    1: MAP_BLUEPRINTS[4],
+    2: {
+        goalX: 5100,
+        ground: [[0, 330], [5050, 5400]],
+        structures: [],
+        platforms: [
+            {x:390,y:310,type:'lava_stone',width:125,height:24,plankIndex:0},
+            {x:570,y:250,type:'lava_stone',width:105,height:22,plankIndex:1},
+            {x:730,y:185,type:'lava_stone',width:115,height:22,plankIndex:2},
+            {x:910,y:275,type:'lava_stone',width:130,height:24,plankIndex:3},
+            {x:1100,y:215,type:'lava_stone',width:100,height:22,plankIndex:4},
+            {x:1260,y:305,type:'lava_stone',width:145,height:24,plankIndex:5},
+            {x:1470,y:235,type:'lava_stone',width:110,height:22,plankIndex:6},
+            {x:1640,y:165,type:'lava_stone',width:105,height:22,plankIndex:7},
+            {x:1810,y:270,type:'lava_stone',width:140,height:24,plankIndex:8},
+            {x:2020,y:205,type:'lava_stone',width:115,height:22,plankIndex:9},
+            {x:2200,y:305,type:'lava_stone',width:135,height:24,plankIndex:10},
+            {x:2400,y:240,type:'lava_stone',width:105,height:22,plankIndex:11},
+            {x:2570,y:170,type:'lava_stone',width:115,height:22,plankIndex:12},
+            {x:2750,y:280,type:'lava_stone',width:145,height:24,plankIndex:13},
+            {x:2970,y:215,type:'lava_stone',width:110,height:22,plankIndex:14},
+            {x:3140,y:145,type:'lava_stone',width:100,height:22,plankIndex:15},
+            {x:3310,y:265,type:'lava_stone',width:140,height:24,plankIndex:16},
+            {x:3520,y:195,type:'lava_stone',width:110,height:22,plankIndex:17},
+            {x:3690,y:300,type:'lava_stone',width:145,height:24,plankIndex:18},
+            {x:3900,y:230,type:'lava_stone',width:110,height:22,plankIndex:19},
+            {x:4070,y:160,type:'lava_stone',width:105,height:22,plankIndex:20},
+            {x:4240,y:275,type:'lava_stone',width:140,height:24,plankIndex:21},
+            {x:4450,y:210,type:'lava_stone',width:110,height:22,plankIndex:22},
+            {x:4620,y:300,type:'lava_stone',width:135,height:24,plankIndex:23},
+            {x:4820,y:235,type:'lava_stone',width:145,height:24,plankIndex:24}
+        ],
+        collectibles: [[420,270],[600,210],[760,145],[950,235],[1130,175],[1300,265],[1500,195],[1670,125],[1850,230],[2050,165],[2240,265],[2430,200],[2600,130],[2790,240],[3000,175],[3170,105],[3350,225],[3550,155],[3730,260],[3930,190],[4100,120],[4280,235],[4480,170],[4650,260],[4860,195]],
+        enemies: []
+    },
+    3: {
+        goalX: 2360,
+        ground: [[0, 2600]],
+        structures: [
+            {x:340,h:55},
+            {x:805,h:88},
+            {x:1280,h:68},
+            {x:1640,h:105}
+        ],
+        platforms: [
+            {x:180,y:310,type:'stair',width:105,height:18},
+            // Dejar 60 px libres sobre cada apoyo: Miau mide 48 px con
+            // Fuerza Felina y debe poder meterse debajo para golpear el bloque.
+            {x:230,y:218,type:'question',searchSpot:true},
+            {x:455,y:282,type:'stair',width:120,height:18},
+            {x:500,y:190,type:'question',searchSpot:true},
+            {x:650,y:330,type:'brick',width:92,height:20},
+            {x:900,y:300,type:'stair',width:125,height:18},
+            {x:950,y:208,type:'question',searchSpot:true},
+            {x:1100,y:270,type:'stair',width:118,height:18},
+            {x:1150,y:178,type:'question',searchSpot:true},
+            {x:1390,y:305,type:'stair',width:125,height:18},
+            {x:1440,y:213,type:'question',searchSpot:true},
+            {x:1760,y:278,type:'stair',width:125,height:18},
+            {x:1810,y:186,type:'question',searchSpot:true}
+        ],
+        collectibles: [[120,330],[205,280],[365,285],[480,245],[610,300],[760,265],[920,260],[1110,230],[1300,270],[1420,265],[1580,245],[1770,238],[1940,300],[2180,320]],
+        enemies: [],
+        dragonZone: { x: 2070, y: 177, width: 150, height: 205, minX: 1990, maxX: 2290 }
+    }
+};
+
+// La fortaleza se divide en un asalto aéreo y la arena final.
+// 6.1 conserva el recorrido original, pero Firulais espera en 6.2.
+const LEVEL_SIX_BLUEPRINTS = {
+    1: {
+        goalX: 5070,
+        bossZone: null,
+        rescueX: 900,
+        ground: [],
+        structures: [],
+        platforms: [],
+        collectibles: [[180,220],[430,155],[690,290],[940,115],[1190,245],[1450,175],[1710,315],[1970,125],[2240,250],[2510,185],[2780,305],[3050,135],[3330,235],[3610,170],[3890,300],[4170,115],[4450,245],[4740,165],[5000,275]],
+        enemies: [
+            {x:560,y:95,minX:420,maxX:850,spriteIndex:1},
+            {x:980,y:285,minX:820,maxX:1260,spriteIndex:2},
+            {x:1430,y:155,minX:1260,maxX:1730,spriteIndex:3},
+            {x:1870,y:270,minX:1700,maxX:2160,spriteIndex:4},
+            {x:2310,y:105,minX:2140,maxX:2600,spriteIndex:5},
+            {x:2760,y:235,minX:2580,maxX:3050,spriteIndex:1},
+            {x:3210,y:125,minX:3040,maxX:3500,spriteIndex:2},
+            {x:3650,y:285,minX:3480,maxX:3940,spriteIndex:3},
+            {x:4100,y:150,minX:3930,maxX:4400,spriteIndex:4},
+            {x:4600,y:245,minX:4410,maxX:4860,spriteIndex:5}
+        ]
+    },
+    2: {
+        goalX: 1510,
+        bossZone: { triggerX: 300, minX: 500, maxX: 1100, bossX: 850, bossY: 270 },
+        rescueX: 1310,
+        ground: [[0, 1650]],
+        // Arena despejada: ningún bloque tapa a Firulais, sus proyectiles
+        // ni la línea de tiro de Super Miau.
+        structures: [],
+        platforms: [],
+        collectibles: [[150,330],[235,330]],
+        enemies: []
+    }
+};
+
 // El primer capítulo ahora se cuenta en tres recorridos consecutivos.
 // La sección 1 reutiliza el plano original sin alterar una sola coordenada.
 const LEVEL_ONE_BLUEPRINTS = {

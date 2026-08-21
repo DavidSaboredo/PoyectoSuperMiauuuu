@@ -10,7 +10,7 @@ const LAND_MOVEMENT = {
     1: { maxSpeed: 4.75, groundAccel: 0.52, airAccel: 0.31, groundDecel: 0.62, airDecel: 0.08, jumpStrength: -12.15 },
     2: { maxSpeed: 4.48, groundAccel: 0.48, airAccel: 0.29, groundDecel: 0.62, airDecel: 0.08, jumpStrength: -11.6 },
     3: { maxSpeed: 4.56, groundAccel: 0.5, airAccel: 0.3, groundDecel: 0.64, airDecel: 0.08, jumpStrength: -12.05 },
-    4: { maxSpeed: 4.22, groundAccel: 0.46, airAccel: 0.27, groundDecel: 0.66, airDecel: 0.09, jumpStrength: -11.78 },
+    5: { maxSpeed: 4.22, groundAccel: 0.46, airAccel: 0.27, groundDecel: 0.66, airDecel: 0.09, jumpStrength: -11.78 },
     6: { maxSpeed: 4.38, groundAccel: 0.47, airAccel: 0.28, groundDecel: 0.64, airDecel: 0.08, jumpStrength: -11.6 },
     7: { maxSpeed: 4.24, groundAccel: 0.46, airAccel: 0.27, groundDecel: 0.66, airDecel: 0.09, jumpStrength: -11.78 }
 };

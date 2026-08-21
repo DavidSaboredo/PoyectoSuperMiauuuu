@@ -1,37 +1,49 @@
 # Arquitectura de Super Miau
 
-## Estructura
+## Capas principales
 
-- `index.html`: estructura de pantallas, HUD y canvas.
-- `css/styles.css`: presentación general y adaptación responsive.
-- `js/audio.js`: sintetizador y efectos sonoros.
-- `js/config.js`: constantes compartidas de física, movimiento y escenario.
-- `js/data/levels.js`: geometría, objetos, enemigos y coleccionables de cada sección.
-- `js/render/backgrounds.js`: fondos atmosféricos y escenografía del parque y la calle.
-- `js/render/entities.js`: render del jugador y entidades móviles de la calle.
-- `js/render/hud.js`: contadores, poderes, métricas de depuración y HUD de combate.
-- `js/render/effects.js`: partículas, sacudidas y primitivas compartidas de canvas.
-- `js/game.js`: estado, niveles, actualización y renderizado.
-- `assets/`: imágenes organizadas por función.
-- `scripts/`: servidor local y controles automáticos del proyecto.
+- `index.html`: pantallas, HUD, controles, video y canvas.
+- `css/styles.css`: diseño propio, adaptación responsive y pantalla completa.
+- `js/config.js`: constantes compartidas de física y rendimiento.
+- `js/data/levels.js`: planos declarativos, plataformas, enemigos y coleccionables.
+- `js/audio.js`: música y efectos sintetizados.
+- `js/render/backgrounds.js`: fondos, parallax y secuencias progresivas.
+- `js/render/effects.js`: partículas y primitivas visuales.
+- `js/render/entities.js`: jugador y entidades móviles.
+- `js/render/hud.js`: interfaz de partida, jefes y diagnóstico.
+- `js/game.js`: estado mutable, actualización, colisiones y flujo entre niveles.
 
-## Flujo del juego
+## Flujo de ejecución
 
-`index.html` carga primero el audio y luego el motor. El bucle principal actualiza el estado en pasos de física y renderiza sobre un canvas de 800 × 450. Los planos de niveles son datos declarativos dentro de `game.js`.
+1. El HTML carga configuración, datos y renderizadores antes de `game.js`.
+2. El prólogo reproduce tres videos locales en secuencia.
+3. `initLevel()` construye el mundo desde el plano activo.
+4. El bucle usa pasos fijos de física y un render por cuadro.
+5. Los renderizadores descartan elementos fuera de cámara.
+6. Las transiciones limpian colecciones temporales antes de construir la siguiente sección.
 
-## Evolución segura
+## Recursos visuales
 
-`game.js` conserva variables globales compartidas. Dividirlo de una sola vez tendría un riesgo alto; la modularización debe hacerse por etapas:
+Los sprites de acciones se reutilizan desde cachés de `Image`. Los fondos progresivos utilizan carga diferida: no reciben `src` hasta ser necesarios. Durante una mezcla se solicita también el siguiente fotograma para evitar cortes visibles.
 
-1. Extraer constantes sin cambiar sus valores. *(Completado)*
-2. Extraer planos de niveles sin cambiar sus valores. *(Completado)*
-3. Extraer renderizadores puros que sólo reciban contexto y estado. *(Fondos, entidades, HUD y efectos completados)*
-4. Encapsular audio, entrada y almacenamiento.
-5. Centralizar el estado mutable en un objeto de sesión.
-6. Añadir pruebas de física y transiciones antes de separar el bucle principal.
+Las cinemáticas viven en `cinematicas/` y se copian tanto a `www/` como a `dist/vercel/` durante la compilación.
 
-Cada etapa debe mantener `npm test` en verde y probar manualmente las transiciones entre secciones.
+## Recuperación de estado
 
-## Limpieza técnica
+Cada inicio de nivel vacía proyectiles, partículas peligrosas y estados exclusivos de la sección anterior. En 3.3 los puntos de reaparición corresponden a islas firmes y `restoreFallingPlatforms()` recompone los tablones. En 5.2 la misma restauración se aplica a las piedras de lava.
 
-El renderizador legado e inalcanzable de la calle 1.3 fue eliminado. Las versiones visuales históricas que todavía son funciones completas se conservan hasta confirmar si alguna sirve como fallback o referencia para otros fondos.
+## Presupuesto de rendimiento
+
+- Resolución lógica de 800 × 450.
+- Física con acumulador y límite de recuperaciones por cuadro.
+- Descarte horizontal antes de dibujar entidades.
+- Límites de partículas y efectos ambientales.
+- Sombras adaptables según la calidad de ejecución.
+- Fondos grandes bajo demanda.
+- Video pausado cuando el documento queda oculto.
+
+## Próximas separaciones seguras
+
+`game.js` sigue concentrando el estado y las reglas de interacción. Las siguientes extracciones recomendadas son entrada y controles, almacenamiento/tienda, controlador de pantallas, mecánicas por mundo y estado de sesión centralizado.
+
+Cada extracción debe conservar las variables públicas consumidas por los renderizadores y mantener `npm test` en verde.

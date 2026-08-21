@@ -73,24 +73,20 @@ function drawDogcatcher() {
     if (!dogcatcher || !dogcatcher.active || !isOnScreen(dogcatcher.x, dogcatcher.width, 120)) return;
     const x = dogcatcher.x - cameraX;
     const y = dogcatcher.y;
-    const stride = Math.sin(dogcatcher.runPhase) * 7;
+    const bob = Math.abs(Math.sin(dogcatcher.runPhase)) * 0.8;
     ctx.save();
     ctx.fillStyle = 'rgba(2,6,23,.5)'; ctx.beginPath(); ctx.ellipse(x + 21, 382, 25, 6, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#172554'; ctx.lineWidth = 8; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(x + 18, y + 50); ctx.lineTo(x + 12 - stride, y + 65); ctx.moveTo(x + 26, y + 50); ctx.lineTo(x + 31 + stride, y + 65); ctx.stroke();
-    ctx.fillStyle = '#1d4ed8'; traceRoundedRect(ctx, x + 8, y + 20, 28, 38, 9); ctx.fill();
-    ctx.fillStyle = '#f3c7a4'; ctx.beginPath(); ctx.arc(x + 22, y + 13, 11, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#1e3a8a'; ctx.fillRect(x + 10, y + 2, 25, 7); ctx.fillRect(x + 27, y + 7, 12, 4);
-    ctx.strokeStyle = '#f3c7a4'; ctx.lineWidth = 6;
-    ctx.beginPath(); ctx.moveTo(x + 12, y + 30); ctx.lineTo(x - 1 - stride * .3, y + 42); ctx.moveTo(x + 34, y + 30); ctx.lineTo(x + 48 + stride * .3, y + 39); ctx.stroke();
-    ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(x - 2, y + 42); ctx.lineTo(x - 18, y + 4); ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(x - 21, y - 3, 13, 18, -.35, 0, Math.PI * 2); ctx.stroke();
-    ctx.fillStyle = 'rgba(15,23,42,.9)'; traceRoundedRect(ctx, x - 28, y - 30, 98, 19, 8); ctx.fill();
-    ctx.fillStyle = '#f8fafc'; ctx.font = 'bold 10px Fredoka'; ctx.textAlign = 'center'; ctx.fillText('PERRERA', x + 21, y - 17);
+    if (DOGCATCHER_SPRITE.complete && DOGCATCHER_SPRITE.naturalWidth > 0) {
+        const drawHeight = 138;
+        const drawWidth = drawHeight * (DOGCATCHER_SPRITE.naturalWidth / DOGCATCHER_SPRITE.naturalHeight);
+        const feetAnchorY = 1486 / 1672;
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(DOGCATCHER_SPRITE, x + 21 - drawWidth / 2, y + dogcatcher.height + 2 - drawHeight * feetAnchorY - bob, drawWidth, drawHeight);
+    }
     if (dogcatcher.distractedTimer > 0) {
-        ctx.fillStyle = 'rgba(254,249,195,.96)'; traceRoundedRect(ctx, x + 44, y - 5, 48, 22, 9); ctx.fill();
-        ctx.fillStyle = '#854d0e'; ctx.font = 'bold 11px Fredoka'; ctx.fillText('¿EH?', x + 68, y + 10);
+        ctx.fillStyle = 'rgba(254,249,195,.96)'; traceRoundedRect(ctx, x + 48, y - 15, 48, 22, 9); ctx.fill();
+        ctx.fillStyle = '#854d0e'; ctx.font = 'bold 11px Fredoka'; ctx.textAlign = 'center'; ctx.fillText('¿EH?', x + 72, y);
     }
     ctx.restore();
 }

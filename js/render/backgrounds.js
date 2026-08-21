@@ -179,7 +179,7 @@ function drawAtmosphericBackdrop() {
 
     ctx.save();
     const orbX = 650 - cameraX * 0.025;
-    const orbY = currentLevel === 5 ? 82 : 90;
+    const orbY = currentLevel === 4 ? 82 : 90;
     const orbRadius = currentLevel === 1 ? 46 : 35;
     const orbGlow = ctx.createRadialGradient(orbX, orbY, 3, orbX, orbY, orbRadius * 2.8);
     orbGlow.addColorStop(0, style.glow);
@@ -237,7 +237,7 @@ function drawForegroundDepth() {
 
     const lowerMist = ctx.createLinearGradient(0, 335, 0, 450);
     lowerMist.addColorStop(0, 'rgba(255,255,255,0)');
-    lowerMist.addColorStop(1, currentLevel === 5 ? 'rgba(34,211,238,.10)' : 'rgba(148,163,184,.045)');
+    lowerMist.addColorStop(1, currentLevel === 4 ? 'rgba(34,211,238,.10)' : 'rgba(148,163,184,.045)');
     ctx.fillStyle = lowerMist;
     ctx.fillRect(0, 335, canvas.width, 115);
     ctx.restore();
@@ -282,6 +282,159 @@ function drawLevelOneStormOverlay() {
 // recortado en hitos del mundo. Nunca vuelve a ser un panorama fijo.
 const JUAN_PERON_STREET_BACKGROUND = new Image();
 JUAN_PERON_STREET_BACKGROUND.src = 'assets/backgrounds/juan-peron-puerto-viejo.jpg';
+
+// Arena 5.3: el panorama permanece anclado al lienzo durante toda la pelea.
+const DRAGON_FIGHT_BACKGROUND = new Image();
+DRAGON_FIGHT_BACKGROUND.src = 'assets/backgrounds/peleadragon.png';
+
+// Panoramas ilustrados que cambian gradualmente mientras avanza la cámara.
+// Se mantienen fuera de los planos de nivel porque son puramente visuales.
+const PROGRESSIVE_LEVEL_BACKGROUNDS = {
+    ghost: ['mundofantasma1.png', 'mundofantasma2.png', 'mundofantasma3.png'],
+    zombie: ['zombie1.png', 'zombie2.png', 'zombie3.png'],
+    vampire: ['vampiro1.png', 'vampiro2.png', 'vampiro3.png'],
+    swamp: ['pantano1.png', 'pantano2.png', 'pantano3.png'],
+    underground: ['subsuelo1.png', 'subsuelo2.png', 'subsuelo3.png'],
+    bridges: ['puentes1.png', 'puentes2.png', 'puentes3.png'],
+    lava: ['lava1.png', 'lava2.png'],
+    dragonWorld: ['mundodrago1.png', 'mundodrago2.png', 'mundodrago3.png'],
+    finalBattle: ['batallafinal1.png', 'batallafinal2.png', 'batallafinal3.png'],
+    brokenExit: ['salida1.png', 'salida2.png', 'salida3.png', 'salida4.png']
+};
+
+function createLazyBackground(fileName) {
+    const image = new Image();
+    image.decoding = 'async';
+    image.pendingSource = `assets/backgrounds/${fileName}`;
+    return image;
+}
+
+function ensureBackgroundLoaded(image) {
+    if (!image.src && image.pendingSource) image.src = image.pendingSource;
+    return image;
+}
+
+Object.keys(PROGRESSIVE_LEVEL_BACKGROUNDS).forEach(key => {
+    PROGRESSIVE_LEVEL_BACKGROUNDS[key] = PROGRESSIVE_LEVEL_BACKGROUNDS[key].map(createLazyBackground);
+});
+
+function drawImageCover(image, alpha = 1) {
+    ensureBackgroundLoaded(image);
+    if (!image.complete || !image.naturalWidth || !image.naturalHeight || alpha <= 0) return false;
+
+    const sourceAspect = image.naturalWidth / image.naturalHeight;
+    const targetAspect = canvas.width / canvas.height;
+    let sourceX = 0;
+    let sourceY = 0;
+    let sourceWidth = image.naturalWidth;
+    let sourceHeight = image.naturalHeight;
+
+    if (sourceAspect > targetAspect) {
+        sourceWidth = image.naturalHeight * targetAspect;
+        sourceX = (image.naturalWidth - sourceWidth) / 2;
+    } else {
+        sourceHeight = image.naturalWidth / targetAspect;
+        sourceY = (image.naturalHeight - sourceHeight) / 2;
+    }
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
+    ctx.restore();
+    return true;
+}
+
+function drawDragonWorldProgress(images) {
+    const maxCameraX = Math.max(1, LEVEL_WIDTH - canvas.width);
+    const progress = Math.max(0, Math.min(1, cameraX / maxCameraX));
+    const exactFrame = progress * images.length;
+    const frameIndex = Math.min(images.length - 1, Math.floor(exactFrame));
+    const localProgress = frameIndex === images.length - 1 ? progress * images.length - frameIndex : exactFrame - frameIndex;
+
+    const drawPannedFrame = (image, alpha, pan) => {
+        ensureBackgroundLoaded(image);
+        if (!image.complete || !image.naturalWidth || !image.naturalHeight) return false;
+        const zoom = 1.13;
+        const sourceWidth = image.naturalWidth / zoom;
+        const sourceHeight = image.naturalHeight / zoom;
+        const sourceX = (image.naturalWidth - sourceWidth) * Math.max(0, Math.min(1, pan));
+        const sourceY = (image.naturalHeight - sourceHeight) * (.42 + Math.sin(progress * Math.PI * 4) * .08);
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
+        ctx.restore();
+        return true;
+    };
+
+    const transition = frameIndex < images.length - 1 ? Math.max(0, (localProgress - .78) / .22) : 0;
+    const firstDrawn = drawPannedFrame(images[frameIndex], 1, localProgress);
+    const secondDrawn = transition > 0 && drawPannedFrame(images[frameIndex + 1], transition, 0);
+
+    // Estelas desplazándose hacia atrás: hacen perceptible la velocidad
+    // incluso cuando las ilustraciones de dos tramos son parecidas.
+    ctx.save();
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 15; i++) {
+        const x = ((i * 137 - gameTick * (3.2 + i % 3)) % (canvas.width + 180) + canvas.width + 180) % (canvas.width + 180) - 90;
+        const y = 34 + (i * 73) % 370;
+        ctx.globalAlpha = .08 + (i % 4) * .025;
+        ctx.strokeStyle = i % 3 === 0 ? '#fde68a' : '#dbeafe';
+        ctx.lineWidth = 1 + i % 3;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 45 + (i % 4) * 16, y); ctx.stroke();
+    }
+    ctx.restore();
+    return firstDrawn || secondDrawn;
+}
+
+function drawProgressiveLevelBackground() {
+    // El nivel 4 es exclusivamente submarino; nunca debe reutilizar una
+    // imagen progresiva conservada por el nivel volcánico anterior.
+    if (currentLevel === 4) return false;
+
+    let images = null;
+
+    if (currentLevel === 5 && levelFiveSection === 3) {
+        return drawImageCover(DRAGON_FIGHT_BACKGROUND);
+    }
+    if (currentLevel === 6 && levelSixSection === 1) {
+        return drawDragonWorldProgress(PROGRESSIVE_LEVEL_BACKGROUNDS.dragonWorld);
+    }
+    if (currentLevel === 6 && levelSixSection === 2) {
+        const phase = boss.hp >= 3 ? 0 : boss.hp === 2 ? 1 : 2;
+        return drawImageCover(PROGRESSIVE_LEVEL_BACKGROUNDS.finalBattle[phase]);
+    }
+    if (currentLevel === 7) {
+        images = PROGRESSIVE_LEVEL_BACKGROUNDS.brokenExit;
+    }
+
+    if (currentLevel === 2 && levelTwoSection === 1) images = PROGRESSIVE_LEVEL_BACKGROUNDS.ghost;
+    else if (currentLevel === 2 && levelTwoSection === 2) images = PROGRESSIVE_LEVEL_BACKGROUNDS.zombie;
+    else if (currentLevel === 2 && levelTwoSection === 3) images = PROGRESSIVE_LEVEL_BACKGROUNDS.vampire;
+    else if (currentLevel === 3 && levelThreeSection === 1) images = PROGRESSIVE_LEVEL_BACKGROUNDS.swamp;
+    else if (currentLevel === 3 && levelThreeSection === 2) images = PROGRESSIVE_LEVEL_BACKGROUNDS.underground;
+    else if (currentLevel === 3 && levelThreeSection === 3) images = PROGRESSIVE_LEVEL_BACKGROUNDS.bridges;
+    else if (currentLevel === 5) images = PROGRESSIVE_LEVEL_BACKGROUNDS.lava;
+    if (!images) return false;
+
+    const maxCameraX = Math.max(1, LEVEL_WIDTH - canvas.width);
+    const progress = Math.max(0, Math.min(1, cameraX / maxCameraX));
+    const imagePosition = progress * (images.length - 1);
+    const firstIndex = Math.floor(imagePosition);
+    const secondIndex = Math.min(images.length - 1, firstIndex + 1);
+    const blend = imagePosition - firstIndex;
+
+    const firstDrawn = drawImageCover(images[firstIndex], 1);
+    const secondDrawn = secondIndex !== firstIndex && drawImageCover(images[secondIndex], blend);
+    return firstDrawn || secondDrawn;
+}
+
+function hasLoadedProgressiveBackground(key) {
+    return PROGRESSIVE_LEVEL_BACKGROUNDS[key].some(image =>
+        image.complete && image.naturalWidth && image.naturalHeight
+    );
+}
 
 // Escudo real aportado como referencia para las banderas del recorrido.
 const PARQUE_SUR_SHIELD_V20 = new Image();
