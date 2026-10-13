@@ -329,21 +329,21 @@ JUAN_PERON_STREET_BACKGROUND.src = 'assets/backgrounds/juan-peron-puerto-viejo.j
 
 // Arena 5.3: el panorama permanece anclado al lienzo durante toda la pelea.
 const DRAGON_FIGHT_BACKGROUND = new Image();
-DRAGON_FIGHT_BACKGROUND.src = 'assets/backgrounds/peleadragon.png';
+DRAGON_FIGHT_BACKGROUND.src = 'assets/backgrounds/peleadragon.webp';
 
 // Panoramas ilustrados que cambian gradualmente mientras avanza la cámara.
 // Se mantienen fuera de los planos de nivel porque son puramente visuales.
 const PROGRESSIVE_LEVEL_BACKGROUNDS = {
-    ghost: ['mundofantasma1.png', 'mundofantasma2.png', 'mundofantasma3.png'],
-    zombie: ['zombie1.png', 'zombie2.png', 'zombie3.png'],
-    vampire: ['vampiro1.png', 'vampiro2.png', 'vampiro3.png'],
-    swamp: ['pantano1.png', 'pantano2.png', 'pantano3.png'],
-    underground: ['subsuelo1.png', 'subsuelo2.png', 'subsuelo3.png'],
-    bridges: ['puentes1.png', 'puentes2.png', 'puentes3.png'],
-    lava: ['lava1.png', 'lava2.png'],
-    dragonWorld: ['mundodrago1.png', 'mundodrago2.png', 'mundodrago3.png'],
-    finalBattle: ['batallafinal1.png', 'batallafinal2.png', 'batallafinal3.png'],
-    brokenExit: ['salida1.png', 'salida2.png', 'salida3.png', 'salida4.png']
+    ghost: ['mundofantasma1.webp', 'mundofantasma2.webp', 'mundofantasma3.webp'],
+    zombie: ['zombie1.webp', 'zombie2.webp', 'zombie3.webp'],
+    vampire: ['vampiro1.webp', 'vampiro2.webp', 'vampiro3.webp'],
+    swamp: ['pantano1.webp', 'pantano2.webp', 'pantano3.webp'],
+    underground: ['subsuelo1.webp', 'subsuelo2.webp', 'subsuelo3.webp'],
+    bridges: ['puentes1.webp', 'puentes2.webp', 'puentes3.webp'],
+    lava: ['lava1.webp', 'lava2.webp'],
+    dragonWorld: ['mundodrago1.webp', 'mundodrago2.webp', 'mundodrago3.webp'],
+    finalBattle: ['batallafinal1.webp', 'batallafinal2.webp', 'batallafinal3.webp'],
+    brokenExit: ['salida1.webp', 'salida2.webp', 'salida3.webp', 'salida4.webp']
 };
 
 function createLazyBackground(fileName) {

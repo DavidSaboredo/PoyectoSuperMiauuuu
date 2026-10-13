@@ -6,14 +6,14 @@ const ctx = canvas.getContext('2d');
 // fisica del juego. En V4 no existe el gato anterior como respaldo:
 // siempre se usan estas ocho imagenes.
 const SUPER_MIAU_SPRITE_DATA = {
-    quieto:      { src: 'assets/sprites/super-miau-quieto.png',      height: 88, anchorX: 0.70 },
-    caminando:   { src: 'assets/sprites/super-miau-caminando.png',   height: 82, anchorX: 0.68 },
-    volando:     { src: 'assets/sprites/super-miau-volando.png',     height: 82, anchorX: 0.67 },
-    aterrizando: { src: 'assets/sprites/super-miau-aterrizando.png', height: 82, anchorX: 0.68 },
-    maullando:   { src: 'assets/sprites/super-miau-maullando.png',   height: 70, anchorX: 0.30 },
-    disparando:  { src: 'assets/sprites/super-miau-disparando.png',  height: 80, anchorX: 0.52 },
-    golpeado:    { src: 'assets/sprites/super-miau-golpeado.png',    height: 82, anchorX: 0.57 },
-    festejando:  { src: 'assets/sprites/super-miau-festejando.png',  height: 92, anchorX: 0.67 }
+    quieto:      { src: 'assets/sprites/super-miau-quieto.webp',      height: 88, anchorX: 0.70 },
+    caminando:   { src: 'assets/sprites/super-miau-caminando.webp',   height: 82, anchorX: 0.68 },
+    volando:     { src: 'assets/sprites/super-miau-volando.webp',     height: 82, anchorX: 0.67 },
+    aterrizando: { src: 'assets/sprites/super-miau-aterrizando.webp', height: 82, anchorX: 0.68 },
+    maullando:   { src: 'assets/sprites/super-miau-maullando.webp',   height: 70, anchorX: 0.30 },
+    disparando:  { src: 'assets/sprites/super-miau-disparando.webp',  height: 80, anchorX: 0.52 },
+    golpeado:    { src: 'assets/sprites/super-miau-golpeado.webp',    height: 82, anchorX: 0.57 },
+    festejando:  { src: 'assets/sprites/super-miau-festejando.webp',  height: 92, anchorX: 0.67 }
 };
 const SUPER_MIAU_SPRITES = {};
 const SUPER_MIAU_TOTAL_SPRITES = Object.keys(SUPER_MIAU_SPRITE_DATA).length;
@@ -54,35 +54,35 @@ updateSuperMiauLoadStatus();
 
 const MANTA_RAY_SPRITE = new Image();
 MANTA_RAY_SPRITE.decoding = 'async';
-MANTA_RAY_SPRITE.src = 'assets/sprites/mantarraya-patineta.png';
+MANTA_RAY_SPRITE.src = 'assets/sprites/mantarraya-patineta.webp';
 
 const OCTOPUS_BOSS_SPRITE = new Image();
 OCTOPUS_BOSS_SPRITE.decoding = 'async';
-OCTOPUS_BOSS_SPRITE.src = 'assets/sprites/pulpo-guardian-tinta.png';
+OCTOPUS_BOSS_SPRITE.src = 'assets/sprites/pulpo-guardian-tinta.webp';
 
 const DOGCATCHER_SPRITE = new Image();
 DOGCATCHER_SPRITE.decoding = 'async';
-DOGCATCHER_SPRITE.src = 'assets/sprites/cazador.png';
+DOGCATCHER_SPRITE.src = 'assets/sprites/cazador.webp';
 
 const ZOMBIE_SPRITE = new Image();
 ZOMBIE_SPRITE.decoding = 'async';
-ZOMBIE_SPRITE.src = 'assets/sprites/zombie.png';
+ZOMBIE_SPRITE.src = 'assets/sprites/zombie.webp';
 
 const VAMPIRE_SPRITE = new Image();
 VAMPIRE_SPRITE.decoding = 'async';
-VAMPIRE_SPRITE.src = 'assets/sprites/vampiro.png';
+VAMPIRE_SPRITE.src = 'assets/sprites/vampiro.webp';
 
 const SPIDER_SPRITE = new Image();
 SPIDER_SPRITE.decoding = 'async';
-SPIDER_SPRITE.src = 'assets/sprites/arania.png';
+SPIDER_SPRITE.src = 'assets/sprites/arania.webp';
 
 const MOLE_SPRITE = new Image();
 MOLE_SPRITE.decoding = 'async';
-MOLE_SPRITE.src = 'assets/sprites/topo.png';
+MOLE_SPRITE.src = 'assets/sprites/topo.webp';
 
 const CAVE_SPRITE = new Image();
 CAVE_SPRITE.decoding = 'async';
-CAVE_SPRITE.src = 'assets/sprites/cueva.png';
+CAVE_SPRITE.src = 'assets/sprites/cueva.webp';
 
 // -----------------------------------------------------------------
 // CINEMÁTICA INICIAL: "LA NOCHE DEL PORTAL"
@@ -937,29 +937,29 @@ let bridgePlanks = [];
 const DRAGON_SPRITES = {};
 ['parado', 'enojado', 'atacando', 'golpeado', 'festejando'].forEach(pose => {
     const image = new Image();
-    image.src = `assets/sprites/dragon_${pose}.png`;
+    image.src = `assets/sprites/dragon_${pose}.webp`;
     DRAGON_SPRITES[pose] = image;
 });
 const DRAGON_AND_MIAU_SPRITE = new Image();
 DRAGON_AND_MIAU_SPRITE.decoding = 'async';
-DRAGON_AND_MIAU_SPRITE.src = 'assets/sprites/dragonymiau.png';
+DRAGON_AND_MIAU_SPRITE.src = 'assets/sprites/dragonymiau.webp';
 const DRAGON_AND_MIAU_ATTACK_SPRITE = new Image();
 DRAGON_AND_MIAU_ATTACK_SPRITE.decoding = 'async';
-DRAGON_AND_MIAU_ATTACK_SPRITE.src = 'assets/sprites/dragonymiauataque.png';
+DRAGON_AND_MIAU_ATTACK_SPRITE.src = 'assets/sprites/dragonymiauataque.webp';
 const DRAGON_WORLD_ENEMY_SPRITES = [1, 2, 3, 4, 5].map(index => {
     const image = new Image();
     image.decoding = 'async';
-    image.src = `assets/sprites/${index}.png`;
+    image.src = `assets/sprites/${index}.webp`;
     return image;
 });
 const FIRULAIS_FINAL_SPRITE = new Image();
 FIRULAIS_FINAL_SPRITE.decoding = 'async';
-FIRULAIS_FINAL_SPRITE.src = 'assets/sprites/perro.png';
+FIRULAIS_FINAL_SPRITE.src = 'assets/sprites/perro.webp';
 const FIRULAIS_ACTION_SPRITES = { idle: FIRULAIS_FINAL_SPRITE };
 [
-    ['attack', 'perroataque.png'],
-    ['hurt', 'perrodañado.png'],
-    ['jump', 'perrosalto.png']
+    ['attack', 'perroataque.webp'],
+    ['hurt', 'perrodañado.webp'],
+    ['jump', 'perrosalto.webp']
 ].forEach(([state, fileName]) => {
     const image = new Image();
     image.decoding = 'async';
@@ -970,13 +970,13 @@ const FAMILY_SPRITES = {};
 ['triste', 'feliz', 'caminando'].forEach(state => {
     const image = new Image();
     image.decoding = 'async';
-    image.src = `assets/sprites/familia${state}.png`;
+    image.src = `assets/sprites/familia${state}.webp`;
     FAMILY_SPRITES[state] = image;
 });
 const PORTAL_SPRITES = [1, 2, 3, 4].map(index => {
     const image = new Image();
     image.decoding = 'async';
-    image.src = `assets/sprites/port${index}.png`;
+    image.src = `assets/sprites/port${index}.webp`;
     return image;
 });
 let dragonBoss = null;
